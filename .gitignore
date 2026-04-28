@@ -37,3 +37,6 @@ data/cache/
 
 # Streamlit
 .streamlit/
+
+# Claude Code settings (local overrides)
+.claude/settings.local.json
