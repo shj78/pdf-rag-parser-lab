@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # 기본 실행 서비스
+  # - pipenv 기반 Dockerfile로 앱이 실행됩니다.
+  # - PROVIDER 값에 따라 ollama 또는 openai 트랙을 사용합니다.
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PROVIDER=${PROVIDER:-ollama}
+      - OLLAMA_BASE=${OLLAMA_BASE:-http://ollama:11434}
+      - OLLAMA_EMBED_MODEL=${OLLAMA_EMBED_MODEL:-nomic-embed-text}
+      - OLLAMA_CHAT_MODEL=${OLLAMA_CHAT_MODEL:-llama3.1}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_EMBEDDING_MODEL=${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      - OPENAI_CHAT_MODEL=${OPENAI_CHAT_MODEL:-gpt-3.5-turbo}
+    volumes:
+      - ./app/uploads:/app/app/uploads
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+
+  # 로컬 Ollama 트랙용 서비스
+  # - PROVIDER=openai여도 이 서비스는 기본으로 올라옵니다.
+  # - OpenAI 전용 운영 시 필요 없으면 `docker compose stop ollama`로 중지 가능합니다.
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+
