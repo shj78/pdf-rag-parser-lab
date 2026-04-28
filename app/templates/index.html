@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>라이브러리 비교를 통한 RAG 문서 에이전트</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+  <h1>라이브러리 비교를 통한 RAG 문서 에이전트</h1>
+  <div class="main-wrapper">
+    <div class="container">
+      <div id="upload-section" class="upload-section">
+        <h2>문서 업로드</h2>
+        <div class="file-input-container">
+          <input type="file" id="file" accept=".pdf" class="file-input-hidden" />
+          <label for="file" class="btn">파일 선택</label>
+          <span id="fileName" class="file-name">선택된 파일 없음</span>
+        </div>
+        <div class="upload-actions">
+          <button id="uploadButton" class="btn hidden">
+            <span class="btn-text">업로드</span>
+            <div id="uploadSpinner" class="spinner hidden"></div>
+          </button>
+        </div>
+      </div>
+
+      <div id="qa-section" class="qa-section hidden">
+        <button id="backButton" class="btn-back">
+          &larr; 새로 업로드하기
+        </button>
+        <h2>질문하기</h2>
+        <p class="info-text">
+          현재 문서 ID: <span id="qaDocumentIdDisplay">N/A</span>
+        </p>
+        <p class="info-text">파일명: <span id="qaFileNameDisplay"></span></p>
+        <div class="qa-actions">
+          <button id="resetSessionButton" class="btn btn-secondary" disabled>
+            세션 종료
+          </button>
+        </div>
+        <textarea id="question" placeholder="질문을 입력하세요..."></textarea>
+        <button id="askButton" class="btn" disabled>
+          <span class="btn-text">질문하기</span>
+          <div id="loadingSpinner" class="spinner hidden"></div>
+        </button>
+        <div id="answer-container" class="hidden">
+          <div id="answer"></div>
+          <div id="trace-panel" class="trace-panel hidden">
+            <h3>처리 과정</h3>
+            <div id="trace-meta" class="trace-meta"></div>
+            <pre id="trace-output"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+
+</html>
