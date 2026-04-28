@@ -1,0 +1,113 @@
+# PDF RAG Parser Lab
+
+`pdf-rag-parser-lab`은 PDF 파서 비교, 청킹(chunking) 및 검색(retrieval) 전략 테스트, 기존 리랭커(reranker) 통합, 그리고 NDCG 지향 메트릭을 통한 실행 평가를 위해 스캐폴드(scaffold)를 우선적으로 구성한 저장소입니다.
+
+이 저장소는 의도적으로 구조, 경계 설정 및 실험 설계에 집중하고 있습니다. 현재 단계에서는 실제 파서 로직, 검색 로직, 리랭커 로직 또는 메트릭 계산은 구현되어 있지 않습니다.
+
+## 이 저장소의 존재 이유
+
+기존의 PDF RAG 시스템에서는 표 파싱의 베이스라인(baseline)으로 `pdfplumber`를 사용해 왔습니다. 초기 실험에는 도움이 되었으나, 다음 단계의 실험을 진행하기에는 표 추출의 정확도와 구조 보존 능력이 충분히 강력하지 않았습니다.
+
+이 랩(Lab) 저장소는 다음과 같은 핵심 관심사를 분리하기 위해 존재합니다:
+
+- `pdfplumber`를 베이스라인 파서로 명시적으로 다룸
+- 베이스라인과 대안 파서들을 비교
+- 파서, 청킹, 검색, 리랭커 통합 및 평가 책임을 명확히 분리
+- 리랭킹 후의 다운스트림 검색 영향도를 쉽게 측정
+- 재사용 가능한 실험 레이아웃으로 NDCG 기반 평가 준비
+
+## 현재 범위 (Current Scope)
+
+이 단계에서 생성된 스캐폴드는 다음과 같습니다:
+
+- 저장소 구조 정의
+- 플레이스홀더(placeholder) 모듈 및 인터페이스
+- 스키마 및 설정(configuration) 초안
+- CLI 및 실험 엔트리 스켈레톤(skeleton)
+- 파서 비교를 위한 UI 플레이스홀더 구조
+
+이번 단계의 범위 밖(Out of scope) 사항:
+
+- 실제 PDF 파서 구현
+- 실제 청킹 로직
+- 실제 검색 또는 벡터 인덱스 구현
+- 실제 리랭커 구현
+- 실제 NDCG 계산
+
+## 베이스라인 vs 대안 파서
+
+- `pdfplumber`: 베이스라인 파서. 기존 시스템에서 사용되었으며 표 충실도와 구조 보존의 한계를 보여주었기 때문에 참조 포인트로 사용됩니다.
+- `pymupdf`: 비교를 위한 대안 파서 후보.
+- `opendataloader`: 향후 파서 어댑터 후보를 위한 플레이스홀더.
+
+목표는 단순히 파서 수준의 비교만이 아닙니다. 이 랩은 파서의 출력이 나중에 청킹, 검색, 리랭킹 및 NDCG 기반 평가로 이어질 수 있도록 설계되었습니다.
+
+## 스캐폴드 구조 (Scaffolded Structure)
+
+```text
+pdf-rag-parser-lab/
+  apps/
+    parser-lab-ui/
+      app.py
+      README.md
+      components/
+      pages/
+  src/
+    __init__.py
+    cli.py
+    schemas.py
+    parsers/
+    chunkers/
+    retrieval/
+    evaluation/
+    metadata/
+  data/
+    README.md
+  config.example.yaml
+  pyproject.toml
+  requirements.txt
+  .env.example
+  .gitignore
+```
+
+## 모듈별 책임 (Module Responsibilities)
+
+| 영역 | 책임 | 아직 구현되지 않은 기능 |
+| --- | --- | --- |
+| `src/parsers` | 파서 인터페이스, 파서 기술자(descriptor), 파서 팩토리 | 실제 PDF 파싱 로직 |
+| `src/chunkers` | 청커 인터페이스 및 청크 메타데이터 계약 | 실제 청크 생성 로직 |
+| `src/retrieval` | 임베딩, 인덱스, 리트리버, 리랭커 브릿지 인터페이스 | 임베딩 호출, 검색, 리랭크 실행 |
+| `src/evaluation` | 관련성 라벨, 평가 결과 스키마, 평가기 설계 | 메트릭 계산 |
+| `src/metadata` | 필터링 및 다운스트림 분석을 위한 메타데이터 계약 | 필터 실행 |
+| `apps/parser-lab-ui` | 파서 비교 워크플로우를 위한 플레이스홀더 UI | 전체 UI 상호작용 |
+
+## 빠른 시작 (Quick Start)
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+예시용 CLI 엔트리 실행:
+
+```bash
+python -m src.cli parser-compare --config config.example.yaml
+```
+
+## 설계 원칙 (Design Principles)
+
+- 파서 비교를 애플리케이션 특정 서비스 코드와 독립적으로 유지합니다.
+- 실험의 입력과 출력을 명시적으로 모델링하여 실행을 재현 가능하게 합니다.
+- 파서 출력의 형태가 다르더라도 다운스트림 평가가 가능하도록 만듭니다.
+- 성급한 구현보다는 명확한 TODO가 있는 작은 인터페이스를 선호합니다.
+- 향후 메타데이터 필터링 및 부모-자식(parent-child) 검색을 위한 여지를 남겨둡니다.
+
+## 향후 계획 (Future Plan)
+
+- 검색 슬라이스를 위한 메타데이터 필터링
+- 제목 인식 청킹 (heading-aware chunking)
+- 부모-자식 검색 실험
+- 리랭커 브릿지 강화
+- 파서 및 청커 조합에 대한 NDCG 기반 평가 실행

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Editor and OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Experiment outputs
+artifacts/
+outputs/
+logs/
+reports/
+
+# Local data caches
+data/raw/
+data/processed/
+data/cache/
+
+# Streamlit
+.streamlit/
