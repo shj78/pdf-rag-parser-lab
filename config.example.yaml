@@ -1,0 +1,51 @@
+project:
+  name: pdf-rag-parser-lab
+  stage: scaffold-only
+  notes:
+    - "This config is intentionally illustrative."
+    - "Real parser, retrieval, reranker, and evaluation logic are TODO."
+
+inputs:
+  document_dir: data/sample_pdfs
+  file_glob: "*.pdf"
+  query_set_path: data/eval/query_set.jsonl
+  relevance_labels_path: data/eval/relevance_labels.jsonl
+
+parser:
+  name: pdfplumber
+  compare_against:
+    - pdfplumber
+    - pymupdf
+    - opendataloader
+  options:
+    parse_tables: true
+    preserve_layout: true
+
+chunker:
+  name: markdown_heading
+  options:
+    target_chunk_size: 1200
+    overlap: 150
+
+retrieval:
+  embedding_provider: openai
+  embedding_model: text-embedding-3-small
+  index_backend: placeholder
+  top_k: 10
+
+reranker:
+  enabled: true
+  adapter: existing_reranker_bridge
+  mode: python_module
+  entrypoint: "TODO.module:function"
+
+evaluation:
+  metric: ndcg
+  k_values: [5, 10]
+  label_source: manual
+
+output:
+  run_dir: experiments/parser_comparison/runs/example-run
+  save_parsed_documents: true
+  save_chunks: true
+  save_rankings: true
