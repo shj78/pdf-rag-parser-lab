@@ -1,0 +1,5 @@
+# Base editable install with development tooling.
+-e .[dev]
+
+# When the scaffold turns into runnable experiments, this can be expanded to:
+# -e .[dev,parsers,retrieval,evaluation]
