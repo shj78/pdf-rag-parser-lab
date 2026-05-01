@@ -204,18 +204,6 @@ def allowed_file(filename: str) -> bool:
 
 
 def extract_text_from_pdf(file_path: str) -> str:
-    """
-    [TODO Day 1] PDF 파일에서 텍스트를 추출하는 함수입니다.
-
-    요구사항:
-    1. PDF에서 텍스트를 추출할 수 있는 방법을 직접 조사하여 구현하세요.
-       - 어떤 라이브러리를 사용할지는 스스로 결정하세요.
-         (Pipfile에 설치된 패키지를 확인하세요.)
-    2. 모든 페이지의 텍스트를 추출하여 하나의 문자열로 합치세요.
-    """
-    # ---------------------------------------------------------
-    # [Day 1] 과제: PDF 텍스트 추출 로직 작성
-    # ---------------------------------------------------------
     texts = []
 
     try:
@@ -679,28 +667,9 @@ async def root_page(request: Request):
 @app.post("/documents/")
 @limiter.limit("10/minute")
 async def upload_document(request: Request, file: UploadFileParam):
-    """
-    [TODO Day 1 & 2] 문서 업로드 및 임베딩 처리 엔드포인트
-
-    프로세스:
-    1. 업로드된 파일을 로컬(UPLOAD_DIR)에 저장
-    2. PDF에서 텍스트 추출
-    3. 텍스트를 청크로 분할
-    4. 각 청크를 임베딩하고 DB에 저장
-    5. (Deep Dive) 대량의 청크를 처리할 때 속도 저하를 막기 위한 방법을 조사해보세요.
-       힌트: Python의 비동기 처리 방식을 검토해보세요.
-    """
-
     document_id = str(uuid4())
 
     try:
-        # ---------------------------------------------------------
-        # [Day 1 & 2] 과제: 파이프라인 구현
-        # 1. 파일 저장
-        # 2. 텍스트 추출
-        # 3. 청크 분할
-        # 4. 임베딩 및 저장
-        # ---------------------------------------------------------
         if not file.filename or not allowed_file(file.filename):
             raise HTTPException(
                 status_code=400, detail="PDF 파일만 업로드할 수 있습니다."

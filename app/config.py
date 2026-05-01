@@ -4,10 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# 공급자 설정: ollama(로컬, 기본) | openai(클라우드, 선택)
 PROVIDER = os.getenv("PROVIDER", "ollama").lower()
 
-# Ollama 설정 (기본값 - 로컬 모델 사용)
+# Ollama 설정
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://localhost:11434")
 OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "llama3.1")

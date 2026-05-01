@@ -37,27 +37,6 @@ def _get_async_openai_client() -> AsyncOpenAI:
 def split_text(
     text: str, chunk_size: int = 1000, chunk_overlap: int = 100
 ) -> List[str]:
-    """
-    [TODO Day 1] 긴 텍스트를 적절한 크기의 청크로 분할하는 함수를 구현하세요.
-
-    요구사항:
-    1. 텍스트를 의미 단위로 분할할 수 있는 방법을 직접 조사하여 구현하세요.
-       - 어떤 라이브러리를 사용할지, 어떤 방식으로 분할할지는 스스로 결정하세요.
-    2. chunk_size와 chunk_overlap 파라미터가 실제 분할 결과에 어떤 영향을 미치는지
-       이해한 상태에서 구현하세요.
-
-    3. (Deep Dive) 다양한 chunk_size를 실험해보고 최적의 값을 찾아보세요.
-       힌트: REFERENCE.md의 청킹 섹션을 먼저 읽고,
-       어떤 파라미터가 품질에 영향을 주는지 파악하세요.
-
-    Args:
-        text (str): 분할할 전체 텍스트
-        chunk_size (int): 청크 당 최대 크기
-        chunk_overlap (int): 청크 간 중복 크기
-
-    Returns:
-        List[str]: 분할된 텍스트 청크 리스트
-    """
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -69,26 +48,7 @@ def split_text(
 
 @traceable(run_type="embedding", name="get_embedding")
 async def get_embedding(text: str) -> List[float]:
-    """
-    [TODO Day 2] 텍스트의 벡터 임베딩을 생성하는 함수를 구현하세요.
 
-    요구사항:
-    1. 로컬에서 실행 중인 Ollama 서버를 통해 임베딩 벡터를 생성하세요.
-       - Ollama API 스펙을 직접 조사하세요: https://github.com/ollama/ollama/blob/main/docs/api.md
-       - 사용할 모델과 반환 벡터 차원은 README.md의 환경 설정 섹션을 참고하세요.
-    2. 반환값은 float 숫자로 구성된 리스트여야 합니다.
-    3. Ollama 서버가 응답하지 않는 경우를 적절히 처리하세요.
-
-    (선택사항) OpenAI 사용:
-    - .env에서 PROVIDER=openai로 설정한 경우에만 사용됩니다.
-    - OpenAI Embeddings API 스펙을 직접 조사하세요.
-
-    Args:
-        text (str): 임베딩할 텍스트
-
-    Returns:
-        List[float]: 임베딩 벡터
-    """
     if PROVIDER == "openai":
         with openai_error_context(timeout=30, error_class=EmbeddingError):
             client = _get_async_openai_client()
