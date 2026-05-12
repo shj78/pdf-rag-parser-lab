@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from typing import Annotated, Any, Dict, List
 from uuid import uuid4
 
-import pdfplumber
 import requests
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,13 +38,13 @@ from .embedding_utils import (
 from .exceptions import (
     FileSystemError,
     LLMError,
-    PDFProcessingError,
     RAGException,
     RerankerError,
     filesystem_error_context,
     ollama_error_context,
     openai_error_context,
 )
+from .pdf_utils import extract_text_from_pdf
 from .supabase_utils import save_embedding, search_similar_embeddings
 
 logging.basicConfig(
@@ -201,63 +200,6 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def extract_text_from_pdf(file_path: str) -> str:
-    texts = []
-
-    try:
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                # 표 영역의 bbox를 수집
-                tables = page.extract_tables()
-                table_bboxes = [table_obj.bbox for table_obj in page.find_tables()]
-
-                # 표 영역을 제외한 일반 텍스트 추출
-                if table_bboxes:
-                    non_table_page = page
-                    for bbox in table_bboxes:
-                        non_table_page = non_table_page.outside_bbox(bbox)
-                    page_text = non_table_page.extract_text()
-                else:
-                    page_text = page.extract_text()
-
-                if page_text:
-                    texts.append(page_text)
-
-                # 표를 마크다운 형식으로 변환
-                for table in tables:
-                    rows = []
-                    for i, row in enumerate(table):
-                        cells = [
-                            str(cell).strip() if cell is not None else ""
-                            for cell in row
-                        ]
-                        rows.append("| " + " | ".join(cells) + " |")
-                        if i == 0:
-                            rows.append("| " + " | ".join(["---"] * len(cells)) + " |")
-                    texts.append("\n".join(rows))
-    except PDFProcessingError:
-        raise
-    except Exception as e:
-        error_msg = str(e).lower()
-        if "password" in error_msg or "encrypted" in error_msg:
-            raise PDFProcessingError(
-                "비밀번호로 보호된 PDF는 처리할 수 없습니다.", detail=str(e)
-            ) from e
-        raise PDFProcessingError(
-            "PDF 파일을 열거나 읽는 중 오류가 발생했습니다. 파일이 손상되었을 수 있습니다.",
-            detail=str(e),
-        ) from e
-
-    full_text = "\n\n".join(texts).strip()
-
-    if not full_text:
-        raise PDFProcessingError(
-            "PDF에서 텍스트를 추출할 수 없습니다. 이미지 전용 PDF이거나 내용이 없는 파일입니다."
-        )
-
-    return full_text
 
 
 async def _build_and_store_clarification(
