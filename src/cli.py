@@ -1,9 +1,4 @@
-"""Command-line entrypoints for experiment scaffolding.
-
-The commands in this module deliberately stop at argument parsing and intent
-description. Real execution flows should be added in later implementation
-phases.
-"""
+"""Command-line entrypoints for parser lab experiments."""
 
 from __future__ import annotations
 
@@ -76,13 +71,23 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _handle_parser_compare(args: argparse.Namespace) -> int:
-    """Placeholder handler for parser comparison orchestration."""
+    """Run parser comparison orchestration."""
 
-    print(
-        "[TODO] parser comparison orchestration is not implemented yet. "
-        f"config={args.config}"
+    from experiments.parser_comparison.run_experiment import (
+        run_parser_comparison_from_file,
     )
-    return 0
+
+    summary = run_parser_comparison_from_file(
+        config_path=args.config,
+        documents_override=args.documents,
+        output_dir_override=args.output_dir,
+    )
+    print(
+        "parser comparison completed. "
+        f"documents={summary['document_count']} "
+        f"run_dir={summary['run_dir']}"
+    )
+    return 0 if summary["has_successful_baseline"] else 1
 
 
 def _handle_chunk_compare(args: argparse.Namespace) -> int:
@@ -106,13 +111,7 @@ def _handle_retrieval_eval(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the placeholder CLI.
-
-    TODO:
-    - load YAML configs
-    - dispatch into experiment modules
-    - write structured run metadata
-    """
+    """Run the parser lab CLI."""
 
     parser = build_parser()
     args = parser.parse_args(argv)
