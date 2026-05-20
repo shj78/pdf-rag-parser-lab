@@ -40,3 +40,11 @@ data/cache/
 
 # Claude Code settings (local overrides)
 .claude/settings.local.json
+
+app-구조.md
+
+# Runtime uploads (FastAPI 업로드 PDF 저장 경로)
+app/uploads/
+
+# Sample PDFs may have copyright restrictions
+assets/*.pdf
