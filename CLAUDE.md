@@ -59,6 +59,43 @@ CLAUDE.md는 advisory다 (~80% 준수율). **반드시 지켜야 할 것은 hook
 
 ---
 
+## 3-1. 프로젝트 경계 (이 repo는 무엇이고 무엇이 아닌가)
+
+이 repo는 **두 레이어를 동시에 보유**한다.
+
+| 레이어 | 위치 | 역할 |
+| --- | --- | --- |
+| **Production RAG 서비스** | `app/`, `eval_ragas.py`, `locustfile.py` | FastAPI 기반 PDF 업로드 → 청킹 → 임베딩 → Supabase 저장 → QA. LangSmith `traceable` + RAGAS 평가 풀세트 이미 동작 |
+| **실험 워크벤치** | `src/`, `experiments/`, `apps/parser-lab-ui/` | PDF 파서 비교, 청킹 전략 비교, retrieval/평가 실험. **stub은 모두 실제 구현 대상** |
+
+### 다른 repo와의 관계
+
+- **`/Users/deepsea/Documents/study/python/pilab-2026-feb-sprint-2-rag`** — **설계 레퍼런스**다. 거기서 RAG 로직을 대신 처리하는 게 아니다.
+  - 파이프라인 설계 결정은 그 repo의 `심혜진/래그_파이프라인_실습_후보.md`, `주간진행사항/`에 기록.
+  - 두 repo의 `app/`은 거의 같은 production RAG 코드 (분기됨).
+  - "RAG는 저 레포에서 한다"가 아니라 "**RAG 설계 접근법은 저 레포에 정리되어 있고, 구현은 여기서 한다**".
+
+### 이 repo에서 실제로 구현해야 할 것 (stub → 실제)
+
+- `src/chunkers/*` — FixedSize, MarkdownHeading 등 **`ParsedDocument`-aware 청킹**
+- `src/retrieval/*` — Embedding, VectorIndex, Retriever, RerankerBridge
+- `src/evaluation/*` — NDCG@k, RetrievalEvaluator, RAGAS 통합
+- `src/metadata/*` — 메타데이터 필터/태깅
+- `src/parsers/opendataloader_parser.py` — 어댑터 (https://github.com/opendataloader-project/opendataloader-pdf)
+- `src/cli.py` 의 `chunk-compare`, `retrieval-eval` 핸들러
+- `apps/parser-lab-ui/pages/*.py` — Streamlit placeholder를 실제 viewer로
+- 실험 측 LangSmith 통합 (`app/main.py`의 `traceable` 패턴 참고 가능)
+
+### 두 레이어 분업 원칙
+
+- `app/embedding_utils.py:split_text`는 **production baseline**. 실험 목적으로 시그니처 변경 금지.
+- 실험용 청킹은 `src/chunkers/`에 신규 구현. 입력은 `text: str`이 아닌 `ParsedDocument` (페이지/표/섹션 메타데이터 보존).
+- production 흐름과 실험 흐름은 별도 경로. 한쪽 변경이 다른쪽 회귀를 일으키면 안 됨.
+
+**왜 이 섹션이 있는가**: 2026-05-20 세션에서 같은 오해가 두 번 반복되어 박제한다 (실수 로그 참조).
+
+---
+
 ## 4. 절대 금지
 
 위반 시 즉시 멈추고 수정한다.
@@ -176,3 +213,6 @@ project-root/
 > 실수가 발생하면 아래에 한 줄씩 추가한다.
 > 처음부터 채우려 하지 않는다. 실패할 때 쌓는 것이다.
 > 같은 실수가 2회 반복되면 위의 규칙이나 냄새 신호로 승격한다.
+
+- **2026-05-20** — 사용자가 다른 repo(`pilab-2026-feb-sprint-2-rag`)를 가리키자 "RAG는 거기서 처리한다"고 단정하고 CLAUDE.md에 "이 repo에서 RAG 로직 구현 금지" 규칙을 넣으려다 거부됨. 실제로는 그 repo가 **설계 레퍼런스**고 이 repo가 실제 구현 대상. → §3-1로 승격.
+- **2026-05-20** — `src/chunkers/` stub만 보고 "청킹 미구현"이라고 사용자에게 보고. 실제로는 `app/embedding_utils.py:split_text`가 production 청킹으로 이미 동작 중. **stub의 유무로 기능 유무를 판단하지 말 것** — `app/`과 `src/` 두 레이어를 모두 확인. → §3-1로 승격.
