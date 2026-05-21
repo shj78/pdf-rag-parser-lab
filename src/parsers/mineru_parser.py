@@ -13,7 +13,6 @@ import subprocess
 import tempfile
 from collections import defaultdict
 from html.parser import HTMLParser
-from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -61,10 +60,9 @@ class MinerUParser(BasePDFParser):
     def validate_environment(self) -> None:
         if shutil.which("mineru") is None:
             raise RuntimeError(
-                "`mineru` CLI not found on PATH. Install via `pipenv install` "
-                "after adding `mineru[core]` to Pipfile."
+                "`mineru` CLI not found on PATH. Activate the isolated venv "
+                "with: PATH=\".venv-mineru/bin:$PATH\" (see README §MinerU)."
             )
-        import_module("mineru")
 
     def parse(self, request: ParseRequest) -> ParsedDocument:
         self.validate_environment()
