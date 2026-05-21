@@ -39,7 +39,8 @@
 
 - `pdfplumber`: 베이스라인 파서. 기존 시스템에서 이미 시도되었으며 표 충실도와 구조 보존의 한계를 보여주었기 때문에 참조 포인트로 사용됩니다.
 - `pymupdf`: 비교를 위한 대안 파서 후보.
-- `opendataloader`: 향후 파서 어댑터 후보를 위한 플레이스홀더.
+- `opendataloader`: 향후 파서 어댑터 후보를 위한 플레이스홀더 (hybrid 모드 검증 필요).
+- `mineru`: 내장 OCR 기반. 텍스트 레이어가 없는 안내책자형 PDF 처리. 무거운 ML 스택을 끌고 와서 **격리 venv `.venv-mineru/`** 에 별도 설치 (아래 섹션 참조).
 
 목표는 단순히 파서 수준의 비교만이 아닙니다. 이 랩은 파서의 출력이 나중에 청킹, 검색, 리랭킹 및 NDCG 기반 평가로 흐를 수 있도록 설계되었습니다.
 
@@ -113,6 +114,24 @@ python -m src.cli parser-compare \
   --config experiments/parser_comparison/config.example.yaml \
   --documents data/sample_pdfs
 ```
+
+## MinerU 어댑터 사용 (격리 venv)
+
+MinerU 는 torch/transformers 등 무거운 ML 의존성을 끌고 와 본 `Pipfile` 과 함께 lock 하면 `ResolutionTooDeepError` 가 납니다. 따라서 본 환경을 오염시키지 않고 **별도 venv** 에 설치해 사용합니다. 결정 배경은 `experiments/parser_candidates_verification.md` §9 참조.
+
+```bash
+# 1) 격리 venv 생성 + mineru 설치 (첫 1회, 수 분 소요)
+python3.11 -m venv .venv-mineru
+.venv-mineru/bin/pip install -U "mineru[core]"
+
+# 2) mineru CLI 가 PATH 에 보이도록 설정 후 실험 실행
+PATH=".venv-mineru/bin:$PATH" pipenv run python -m src.cli parser-compare \
+  --config experiments/parser_comparison/config.example.yaml
+```
+
+- 첫 실행 시 모델 weights 약 1.1 GB 가 `~/.cache/huggingface/hub/` 에 자동 다운로드됩니다 (이후 영구 재사용).
+- CPU pipeline 백엔드 기준 페이지당 약 30 초 (Apple Silicon).
+- 어댑터 코드 자체는 본 환경에 있으며, 호출 시 `shutil.which("mineru")` 로 격리 venv 의 CLI 를 찾습니다.
 
 ## 설계 원칙 (Design Principles)
 

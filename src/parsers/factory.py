@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .base import BasePDFParser
+from .mineru_parser import MinerUParser
 from .opendataloader_parser import OpenDataLoaderParser
 from .pdfplumber_parser import PDFPlumberBaselineParser
 from .pymupdf_parser import PyMuPDFParser
@@ -12,6 +13,7 @@ PARSER_REGISTRY: dict[str, type[BasePDFParser]] = {
     PDFPlumberBaselineParser.name: PDFPlumberBaselineParser,
     PyMuPDFParser.name: PyMuPDFParser,
     OpenDataLoaderParser.name: OpenDataLoaderParser,
+    MinerUParser.name: MinerUParser,
 }
 
 

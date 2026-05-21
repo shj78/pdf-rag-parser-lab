@@ -56,6 +56,7 @@ CLAUDE.md는 advisory다 (~80% 준수율). **반드시 지켜야 할 것은 hook
 - **의존성**: `Pipfile` 관리. `pipenv run`으로 실행. `pip install` 직접 설치 금지.
 - **환경 변수**: `.env`가 `config.py` 기본값을 오버라이드한다. 코드만 보면 안 되고 실제 로드된 값을 확인해야 한다.
 - **Python**: 3.11
+- **MinerU 의존성 격리**: `mineru` 는 무거운 ML 스택과 본 `Pipfile` lock 충돌(ResolutionTooDeepError) 때문에 별도 venv `.venv-mineru/` 에 설치한다. 사용 시 `PATH=".venv-mineru/bin:$PATH"` 로 활성화. 결정 배경은 `experiments/parser_candidates_verification.md` §9 참조.
 
 ---
 

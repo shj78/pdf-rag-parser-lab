@@ -12,6 +12,7 @@ dist/
 # Virtual environments
 .env
 .venv/
+.venv-mineru/
 env/
 venv/
 ENV/
