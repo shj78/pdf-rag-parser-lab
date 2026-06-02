@@ -13,6 +13,7 @@ dist/
 .env
 .venv/
 .venv-mineru/
+.venv-opendataloader/
 env/
 venv/
 ENV/

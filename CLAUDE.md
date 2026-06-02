@@ -57,6 +57,7 @@ CLAUDE.md는 advisory다 (~80% 준수율). **반드시 지켜야 할 것은 hook
 - **환경 변수**: `.env`가 `config.py` 기본값을 오버라이드한다. 코드만 보면 안 되고 실제 로드된 값을 확인해야 한다.
 - **Python**: 3.11
 - **MinerU 의존성 격리**: `mineru` 는 무거운 ML 스택과 본 `Pipfile` lock 충돌(ResolutionTooDeepError) 때문에 별도 venv `.venv-mineru/` 에 설치한다. 사용 시 `PATH=".venv-mineru/bin:$PATH"` 로 활성화. 결정 배경은 `experiments/parser_candidates_verification.md` §9 참조.
+- **OpenDataLoader 의존성 격리**: `opendataloader-pdf[hybrid]` 는 별도 venv `.venv-opendataloader/` 에 설치한다. hybrid smoke 는 `opendataloader-pdf-hybrid --port 5002 --force-ocr --ocr-engine easyocr --ocr-lang ko,en --device cpu` 백엔드를 먼저 띄운 뒤 실행한다.
 
 ---
 

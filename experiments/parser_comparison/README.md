@@ -30,5 +30,7 @@ Runnable MVP.
 
 - `pdfplumber` baseline parsing implemented
 - `pymupdf` parsing implemented
-- `opendataloader` remains a reserved adapter slot and currently reports
-  `NotImplementedError`
+- `mineru` parsing implemented through an isolated `.venv-mineru/` CLI
+- `opendataloader` parsing implemented through an isolated `.venv-opendataloader/` CLI
+- OpenDataLoader hybrid mode requires a running `opendataloader-pdf-hybrid`
+  backend before execution

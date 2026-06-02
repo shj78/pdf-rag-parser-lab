@@ -25,6 +25,8 @@
 - parser comparison CLI 및 실행 러너
 - `pdfplumber` baseline parser 어댑터
 - `pymupdf` parser 어댑터
+- `mineru` parser 어댑터
+- `opendataloader` parser 어댑터
 - parsed document / comparison artifact 저장
 - 파서 비교를 위한 UI 플레이스홀더 구조
 
@@ -39,8 +41,8 @@
 
 - `pdfplumber`: 베이스라인 파서. 기존 시스템에서 이미 시도되었으며 표 충실도와 구조 보존의 한계를 보여주었기 때문에 참조 포인트로 사용됩니다.
 - `pymupdf`: 비교를 위한 대안 파서 후보.
-- `opendataloader`: 향후 파서 어댑터 후보를 위한 플레이스홀더 (hybrid 모드 검증 필요).
 - `mineru`: 내장 OCR 기반. 텍스트 레이어가 없는 안내책자형 PDF 처리. 무거운 ML 스택을 끌고 와서 **격리 venv `.venv-mineru/`** 에 별도 설치 (아래 섹션 참조).
+- `opendataloader`: Java 기반 local 추출 + 선택적 hybrid OCR. **격리 venv `.venv-opendataloader/`** 에 별도 설치하며, hybrid 모드는 별도 backend 서버가 필요합니다.
 
 목표는 단순히 파서 수준의 비교만이 아닙니다. 이 랩은 파서의 출력이 나중에 청킹, 검색, 리랭킹 및 NDCG 기반 평가로 흐를 수 있도록 설계되었습니다.
 
@@ -82,7 +84,7 @@ pdf-rag-parser-lab/
 
 | 영역 | 책임 | 아직 구현되지 않은 기능 |
 | --- | --- | --- |
-| `src/parsers` | 파서 인터페이스, 파서 기술자(descriptor), 파서 팩토리 | 일부 parser만 구현됨 (`pdfplumber`, `pymupdf`) |
+| `src/parsers` | 파서 인터페이스, 파서 기술자(descriptor), 파서 팩토리 | 비교 품질 개선 및 parser별 옵션 확장 |
 | `src/chunkers` | 청커 인터페이스 및 청크 메타데이터 계약 | 실제 청크 생성 로직 |
 | `src/retrieval` | 임베딩, 인덱스, 리트리버, 리랭커 브릿지 인터페이스 | 임베딩 호출, 검색, 리랭크 실행 |
 | `src/evaluation` | 관련성 라벨, 평가 결과 스키마, 평가기 설계 | 메트릭 계산 |
@@ -132,6 +134,32 @@ PATH=".venv-mineru/bin:$PATH" pipenv run python -m src.cli parser-compare \
 - 첫 실행 시 모델 weights 약 1.1 GB 가 `~/.cache/huggingface/hub/` 에 자동 다운로드됩니다 (이후 영구 재사용).
 - CPU pipeline 백엔드 기준 페이지당 약 30 초 (Apple Silicon).
 - 어댑터 코드 자체는 본 환경에 있으며, 호출 시 `shutil.which("mineru")` 로 격리 venv 의 CLI 를 찾습니다.
+
+## OpenDataLoader 어댑터 사용 (격리 venv)
+
+OpenDataLoader 는 본 `Pipfile` 에 직접 넣지 않고 별도 venv 에 설치합니다. local 모드는 빠르지만 텍스트 레이어가 없는 안내책자형 PDF 에서는 빈 결과가 나올 수 있으므로, OCR 이 필요한 경우 hybrid backend 를 먼저 실행해야 합니다.
+
+```bash
+# 1) 격리 venv 생성 + OpenDataLoader 설치
+python3.11 -m venv .venv-opendataloader
+.venv-opendataloader/bin/pip install -U "opendataloader-pdf[hybrid]"
+
+# 2) hybrid backend 실행 (OCR 필요 시)
+.venv-opendataloader/bin/opendataloader-pdf-hybrid \
+  --port 5002 \
+  --force-ocr \
+  --ocr-engine easyocr \
+  --ocr-lang ko,en \
+  --device cpu
+
+# 3) parser config 에서 opendataloader 를 선택해 비교 실행
+pipenv run python -m src.cli parser-compare \
+  --config experiments/parser_comparison/config.example.yaml
+```
+
+- 기본 CLI 경로는 `.venv-opendataloader/bin/opendataloader-pdf` 입니다.
+- hybrid 옵션은 parser config 의 `parser_options.opendataloader` 아래에 `hybrid_backend`, `hybrid_url`, `hybrid_mode`, `pages` 로 전달합니다.
+- 안내책자 1~3페이지 smoke 기준: local 모드는 `text_blocks=0`, hybrid `docling-fast/full` 모드는 `text_blocks=248`, `warnings=0` 으로 정규화되었습니다.
 
 ## 설계 원칙 (Design Principles)
 
