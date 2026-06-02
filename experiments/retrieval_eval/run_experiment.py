@@ -20,7 +20,13 @@ from src.evaluation.schemas import (
     QueryEvaluationInput,
     RelevanceLabel,
 )
-from src.retrieval.index import IndexConfig, LexicalInMemoryIndex
+from src.retrieval.embeddings import EmbeddingConfig, create_embedding_provider
+from src.retrieval.index import (
+    EmbeddingInMemoryIndex,
+    IndexConfig,
+    LexicalInMemoryIndex,
+    VectorIndex,
+)
 from src.retrieval.retriever import RetrievalPipelineConfig, Retriever
 from src.schemas import Chunk
 
@@ -39,6 +45,9 @@ class RetrievalEvalConfig:
     target_chunk_size: int = 800
     overlap: int = 120
     index_backend: str = "lexical_in_memory"
+    embedding_provider: str = "hashing"
+    embedding_model: str = "hashing-token-v1"
+    embedding_options: dict[str, Any] = field(default_factory=dict)
     top_k: int = 10
     filters: dict[str, Any] = field(default_factory=dict)
     metric_names: list[str] = field(default_factory=lambda: ["ndcg"])
@@ -111,6 +120,9 @@ def load_experiment_config(
         target_chunk_size=int(chunker_options.get("target_chunk_size", 800)),
         overlap=int(chunker_options.get("overlap", 120)),
         index_backend=retrieval.get("index_backend", "lexical_in_memory"),
+        embedding_provider=retrieval.get("embedding_provider", "hashing"),
+        embedding_model=retrieval.get("embedding_model", "hashing-token-v1"),
+        embedding_options=dict(retrieval.get("embedding_options", {})),
         top_k=int(retrieval.get("top_k", 10)),
         filters=dict(retrieval.get("filters", {})),
         metric_names=_list_value(evaluation.get("metric_names") or evaluation.get("metric"), ["ndcg"]),
@@ -125,16 +137,13 @@ def run_retrieval_eval(config: RetrievalEvalConfig) -> dict[str, Any]:
 
     if config.chunker_name != "fixed_size":
         raise ValueError(f"Unsupported chunker: {config.chunker_name}")
-    if config.index_backend != "lexical_in_memory":
-        raise ValueError(f"Unsupported retrieval index: {config.index_backend}")
-
     started_at = datetime.now(timezone.utc).isoformat()
     run_dir = ensure_directory(config.output_dir)
     chunks = _load_chunks(config)
     queries = _load_queries(config.query_set_path)
     relevance_labels = _load_relevance_labels(config.relevance_labels_path)
 
-    index = LexicalInMemoryIndex(IndexConfig(backend_name=config.index_backend))
+    index = _build_index(config)
     index.build(chunks)
     retriever = Retriever(
         vector_index=index,
@@ -192,6 +201,14 @@ def run_retrieval_eval(config: RetrievalEvalConfig) -> dict[str, Any]:
         "label_count": len(relevance_labels),
         "chunk_count": len(chunks),
         "index_backend": config.index_backend,
+        "embedding_provider": (
+            config.embedding_provider
+            if config.index_backend == "embedding_in_memory"
+            else None
+        ),
+        "embedding_model": (
+            config.embedding_model if config.index_backend == "embedding_in_memory" else None
+        ),
         "chunker_name": config.chunker_name,
         "top_k": config.top_k,
         "scores": [asdict(score) for score in evaluation_result.scores],
@@ -262,6 +279,25 @@ def _load_chunks(config: RetrievalEvalConfig) -> list[Chunk]:
             )
         )
     return chunks
+
+
+def _build_index(config: RetrievalEvalConfig) -> VectorIndex:
+    index_config = IndexConfig(backend_name=config.index_backend)
+    if config.index_backend == "lexical_in_memory":
+        return LexicalInMemoryIndex(index_config)
+    if config.index_backend == "embedding_in_memory":
+        embedding_provider = create_embedding_provider(
+            EmbeddingConfig(
+                provider_name=config.embedding_provider,
+                model_name=config.embedding_model,
+                extra_options=config.embedding_options,
+            )
+        )
+        return EmbeddingInMemoryIndex(
+            embedding_provider=embedding_provider,
+            config=index_config,
+        )
+    raise ValueError(f"Unsupported retrieval index: {config.index_backend}")
 
 
 def _parsed_document_paths(parsed_documents_dir: Path) -> list[Path]:

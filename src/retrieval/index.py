@@ -11,6 +11,8 @@ from typing import Any
 
 from src.schemas import Chunk, RetrievalResult
 
+from .embeddings import EmbeddingProvider, EmbeddingRequest
+
 
 @dataclass(slots=True)
 class IndexConfig:
@@ -81,7 +83,10 @@ class LexicalInMemoryIndex(VectorIndex):
         for chunk in self._chunks:
             if not _matches_filters(chunk, request.filters):
                 continue
-            score = _cosine(query_vector, self._vectors.get(chunk.chunk_id, Counter()))
+            score = _sparse_cosine(
+                query_vector,
+                self._vectors.get(chunk.chunk_id, Counter()),
+            )
             if score <= 0:
                 continue
             scored.append((score, chunk))
@@ -111,11 +116,82 @@ class LexicalInMemoryIndex(VectorIndex):
         return results
 
 
+class EmbeddingInMemoryIndex(VectorIndex):
+    """Small local vector index using an injected embedding provider."""
+
+    def __init__(
+        self,
+        embedding_provider: EmbeddingProvider,
+        config: IndexConfig | None = None,
+    ) -> None:
+        self.embedding_provider = embedding_provider
+        self.config = config or IndexConfig(backend_name="embedding_in_memory")
+        self._chunks: list[Chunk] = []
+        self._vectors: dict[str, list[float]] = {}
+
+    def build(self, chunks: list[Chunk]) -> None:
+        self._chunks = list(chunks)
+        embeddings = self.embedding_provider.embed(
+            EmbeddingRequest(
+                texts=[chunk.text for chunk in self._chunks],
+                input_type="document",
+            )
+        )
+        if len(embeddings) != len(self._chunks):
+            raise ValueError("embedding provider returned a mismatched vector count")
+        self._vectors = {
+            chunk.chunk_id: _validate_vector(vector)
+            for chunk, vector in zip(self._chunks, embeddings, strict=True)
+        }
+
+    def search(self, request: SearchRequest) -> list[RetrievalResult]:
+        query_embeddings = self.embedding_provider.embed(
+            EmbeddingRequest(texts=[request.query_text], input_type="query")
+        )
+        if len(query_embeddings) != 1:
+            raise ValueError("embedding provider must return exactly one query vector")
+        query_vector = _validate_vector(query_embeddings[0])
+        if not query_vector:
+            return []
+
+        scored: list[tuple[float, Chunk]] = []
+        for chunk in self._chunks:
+            if not _matches_filters(chunk, request.filters):
+                continue
+            score = _dense_cosine(query_vector, self._vectors.get(chunk.chunk_id, []))
+            scored.append((score, chunk))
+
+        scored.sort(key=lambda item: item[0], reverse=True)
+        results: list[RetrievalResult] = []
+        for rank, (score, chunk) in enumerate(scored[: request.top_k], start=1):
+            results.append(
+                RetrievalResult(
+                    query_id=request.query_id,
+                    chunk_id=chunk.chunk_id,
+                    document_id=chunk.document_id,
+                    parser_name=chunk.parser_name,
+                    score=round(score, 6),
+                    rank=rank,
+                    page_number=chunk.page_number,
+                    metadata={
+                        **chunk.metadata,
+                        "chunk_type": chunk.chunk_type,
+                        "section_title": chunk.section_title,
+                        "heading_path": chunk.heading_path,
+                        "text_preview": chunk.text[:500],
+                        "source_block_ids": chunk.source_block_ids,
+                        "index_backend": self.config.backend_name,
+                    },
+                )
+            )
+        return results
+
+
 def _tokenize(text: str) -> list[str]:
     return re.findall(r"[0-9A-Za-z가-힣]+", text.lower())
 
 
-def _cosine(left: Counter[str], right: Counter[str]) -> float:
+def _sparse_cosine(left: Counter[str], right: Counter[str]) -> float:
     if not left or not right:
         return 0.0
     numerator = sum(left[token] * right.get(token, 0) for token in left)
@@ -126,6 +202,26 @@ def _cosine(left: Counter[str], right: Counter[str]) -> float:
     if left_norm == 0 or right_norm == 0:
         return 0.0
     return numerator / (left_norm * right_norm)
+
+
+def _dense_cosine(left: list[float], right: list[float]) -> float:
+    if not left or not right:
+        return 0.0
+    if len(left) != len(right):
+        raise ValueError("embedding vectors must have the same dimension")
+    numerator = sum(
+        left_value * right_value
+        for left_value, right_value in zip(left, right, strict=True)
+    )
+    left_norm = math.sqrt(sum(value * value for value in left))
+    right_norm = math.sqrt(sum(value * value for value in right))
+    if left_norm == 0 or right_norm == 0:
+        return 0.0
+    return numerator / (left_norm * right_norm)
+
+
+def _validate_vector(vector: list[float]) -> list[float]:
+    return [float(value) for value in vector]
 
 
 def _matches_filters(chunk: Chunk, filters: dict[str, Any]) -> bool:

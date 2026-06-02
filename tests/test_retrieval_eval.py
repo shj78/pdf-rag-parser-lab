@@ -41,7 +41,32 @@ def test_cli_retrieval_eval_runs_experiment(tmp_path: Path) -> None:
     assert read_json(output_dir / "run_summary.json")["query_count"] == 1
 
 
-def _write_fixture_files(tmp_path: Path) -> Path:
+def test_run_retrieval_eval_supports_embedding_in_memory_backend(
+    tmp_path: Path,
+) -> None:
+    config_path = _write_fixture_files(
+        tmp_path,
+        extra_retrieval_lines=[
+            "  index_backend: embedding_in_memory",
+            "  embedding_provider: hashing",
+            "  embedding_model: hashing-token-v1",
+            "  embedding_options:",
+            "    dimensions: 16",
+        ],
+    )
+
+    summary = run_retrieval_eval_from_file(config_path)
+
+    assert summary["index_backend"] == "embedding_in_memory"
+    assert summary["embedding_provider"] == "hashing"
+    assert read_json(tmp_path / "out" / "run_summary.json")["chunk_count"] == 2
+
+
+def _write_fixture_files(
+    tmp_path: Path,
+    *,
+    extra_retrieval_lines: list[str] | None = None,
+) -> Path:
     parsed_dir = tmp_path / "parsed" / "mineru"
     parsed_dir.mkdir(parents=True)
     write_parsed_document(
@@ -87,6 +112,9 @@ def _write_fixture_files(tmp_path: Path) -> Path:
         ],
     )
     config_path = tmp_path / "config.yaml"
+    retrieval_lines = extra_retrieval_lines or [
+        "  index_backend: lexical_in_memory",
+    ]
     config_path.write_text(
         "\n".join(
             [
@@ -102,7 +130,7 @@ def _write_fixture_files(tmp_path: Path) -> Path:
                 "    target_chunk_size: 80",
                 "    overlap: 10",
                 "retrieval:",
-                "  index_backend: lexical_in_memory",
+                *retrieval_lines,
                 "  top_k: 3",
                 "evaluation:",
                 "  metric: ndcg",
