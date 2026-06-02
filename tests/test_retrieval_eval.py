@@ -62,10 +62,37 @@ def test_run_retrieval_eval_supports_embedding_in_memory_backend(
     assert read_json(tmp_path / "out" / "run_summary.json")["chunk_count"] == 2
 
 
+def test_run_retrieval_eval_supports_python_module_reranker(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    _write_reranker_module(tmp_path)
+    monkeypatch.syspath_prepend(str(tmp_path))
+    config_path = _write_fixture_files(
+        tmp_path,
+        extra_reranker_lines=[
+            "reranker:",
+            "  enabled: true",
+            "  mode: python_module",
+            "  entrypoint: fixture_reranker:table_first",
+            "  top_k: 1",
+        ],
+    )
+
+    summary = run_retrieval_eval_from_file(config_path)
+
+    assert summary["reranker_enabled"] is True
+    assert summary["reranker_entrypoint"] == "fixture_reranker:table_first"
+    rankings = read_json(tmp_path / "out" / "rankings.json")
+    first_result = rankings["queries"][0]["results"][0]
+    assert first_result["metadata"]["retriever_stage"] == "reranked"
+
+
 def _write_fixture_files(
     tmp_path: Path,
     *,
     extra_retrieval_lines: list[str] | None = None,
+    extra_reranker_lines: list[str] | None = None,
 ) -> Path:
     parsed_dir = tmp_path / "parsed" / "mineru"
     parsed_dir.mkdir(parents=True)
@@ -135,6 +162,7 @@ def _write_fixture_files(
                 "evaluation:",
                 "  metric: ndcg",
                 "  k_values: [1]",
+                *(extra_reranker_lines or []),
                 "output:",
                 "  run_dir: out",
                 "",
@@ -148,5 +176,22 @@ def _write_fixture_files(
 def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
     path.write_text(
         "\n".join(json.dumps(row, ensure_ascii=False) for row in rows) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_reranker_module(tmp_path: Path) -> None:
+    (tmp_path / "fixture_reranker.py").write_text(
+        "\n".join(
+            [
+                "def table_first(query, chunks, top_n=10):",
+                "    ranked = sorted(",
+                "        chunks,",
+                "        key=lambda chunk: chunk.get('metadata', {}).get('has_table') is not True,",
+                "    )",
+                "    return ranked[:top_n]",
+                "",
+            ]
+        ),
         encoding="utf-8",
     )

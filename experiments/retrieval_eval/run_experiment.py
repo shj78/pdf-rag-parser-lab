@@ -21,12 +21,17 @@ from src.evaluation.schemas import (
     RelevanceLabel,
 )
 from src.retrieval.embeddings import EmbeddingConfig, create_embedding_provider
+from src.retrieval.existing_reranker_bridge import (
+    ExistingRerankerBridge,
+    ExistingRerankerBridgeConfig,
+)
 from src.retrieval.index import (
     EmbeddingInMemoryIndex,
     IndexConfig,
     LexicalInMemoryIndex,
     VectorIndex,
 )
+from src.retrieval.reranker_adapter import BaseRerankerAdapter
 from src.retrieval.retriever import RetrievalPipelineConfig, Retriever
 from src.schemas import Chunk
 
@@ -50,6 +55,11 @@ class RetrievalEvalConfig:
     embedding_options: dict[str, Any] = field(default_factory=dict)
     top_k: int = 10
     filters: dict[str, Any] = field(default_factory=dict)
+    reranker_enabled: bool = False
+    reranker_mode: str = "python_module"
+    reranker_entrypoint: str | None = None
+    reranker_top_k: int | None = None
+    reranker_options: dict[str, Any] = field(default_factory=dict)
     metric_names: list[str] = field(default_factory=lambda: ["ndcg"])
     k_values: list[int] = field(default_factory=lambda: [5, 10])
     save_chunks: bool = True
@@ -86,6 +96,7 @@ def load_experiment_config(
     chunker = raw_config.get("chunker", {})
     chunker_options = chunker.get("options", {})
     retrieval = raw_config.get("retrieval", {})
+    reranker = raw_config.get("reranker", {})
     evaluation = raw_config.get("evaluation", {})
     output = raw_config.get("output", {})
 
@@ -125,6 +136,15 @@ def load_experiment_config(
         embedding_options=dict(retrieval.get("embedding_options", {})),
         top_k=int(retrieval.get("top_k", 10)),
         filters=dict(retrieval.get("filters", {})),
+        reranker_enabled=bool(reranker.get("enabled", False)),
+        reranker_mode=reranker.get("mode", "python_module"),
+        reranker_entrypoint=reranker.get("entrypoint"),
+        reranker_top_k=(
+            int(reranker["top_k"])
+            if reranker.get("top_k") is not None
+            else None
+        ),
+        reranker_options=dict(reranker.get("options", {})),
         metric_names=_list_value(evaluation.get("metric_names") or evaluation.get("metric"), ["ndcg"]),
         k_values=[int(value) for value in evaluation.get("k_values", [5, 10])],
         save_chunks=bool(output.get("save_chunks", True)),
@@ -145,12 +165,14 @@ def run_retrieval_eval(config: RetrievalEvalConfig) -> dict[str, Any]:
 
     index = _build_index(config)
     index.build(chunks)
+    reranker = _build_reranker(config)
     retriever = Retriever(
         vector_index=index,
+        reranker=reranker,
         config=RetrievalPipelineConfig(
             top_k_before_rerank=config.top_k,
-            top_k_after_rerank=config.top_k,
-            enable_reranker=False,
+            top_k_after_rerank=config.reranker_top_k or config.top_k,
+            enable_reranker=config.reranker_enabled,
             metadata_filters=config.filters,
         ),
     )
@@ -211,6 +233,12 @@ def run_retrieval_eval(config: RetrievalEvalConfig) -> dict[str, Any]:
         ),
         "chunker_name": config.chunker_name,
         "top_k": config.top_k,
+        "reranker_enabled": config.reranker_enabled,
+        "reranker_mode": config.reranker_mode if config.reranker_enabled else None,
+        "reranker_entrypoint": (
+            config.reranker_entrypoint if config.reranker_enabled else None
+        ),
+        "reranker_top_k": config.reranker_top_k if config.reranker_enabled else None,
         "scores": [asdict(score) for score in evaluation_result.scores],
         "started_at": started_at,
         "completed_at": completed_at,
@@ -298,6 +326,22 @@ def _build_index(config: RetrievalEvalConfig) -> VectorIndex:
             config=index_config,
         )
     raise ValueError(f"Unsupported retrieval index: {config.index_backend}")
+
+
+def _build_reranker(config: RetrievalEvalConfig) -> BaseRerankerAdapter | None:
+    if not config.reranker_enabled:
+        return None
+    if config.reranker_mode != "python_module":
+        raise ValueError(f"Unsupported reranker mode: {config.reranker_mode}")
+    reranker = ExistingRerankerBridge(
+        ExistingRerankerBridgeConfig(
+            mode=config.reranker_mode,
+            entrypoint=config.reranker_entrypoint,
+            extra_options=config.reranker_options,
+        )
+    )
+    reranker.healthcheck()
+    return reranker
 
 
 def _parsed_document_paths(parsed_documents_dir: Path) -> list[Path]:
