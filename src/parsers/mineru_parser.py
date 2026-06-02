@@ -20,7 +20,7 @@ from src.schemas import ParsedDocument, ParsedPage, TableBlock, TextBlock
 
 from .base import BasePDFParser
 from .helpers import normalize_cell, table_rows_to_markdown
-from .schemas import ParseRequest, ParserDescriptor
+from .schemas import ParserDescriptor, ParseRequest
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class MinerUParser(BasePDFParser):
     def describe(cls) -> ParserDescriptor:
         return ParserDescriptor(
             name=cls.name,
-            display_name="MinerU Parser",
+            display_name="MinerU 파서",
             description=(
                 "OCR 내장 PDF 파서. 한국어 안내책자형 PDF 의 표/이미지/달력 "
                 "구조를 markdown + content_list.json 으로 추출한다."

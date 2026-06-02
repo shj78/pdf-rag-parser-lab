@@ -13,7 +13,7 @@ from typing import Any
 from src.artifacts import ensure_directory, write_json, write_parsed_document
 from src.config_loader import load_yaml_config, resolve_path
 from src.parsers import create_parser
-from src.parsers.schemas import ParseRequest, ParserConfig
+from src.parsers.schemas import ParserConfig, ParseRequest
 from src.schemas import ParsedDocument
 
 

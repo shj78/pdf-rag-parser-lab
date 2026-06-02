@@ -6,7 +6,7 @@ import yaml
 
 from experiments.parser_comparison.run_experiment import run_parser_comparison_from_file
 from src.parsers.base import BasePDFParser
-from src.parsers.schemas import ParseRequest, ParserDescriptor
+from src.parsers.schemas import ParserDescriptor, ParseRequest
 from src.schemas import ParsedDocument, ParsedPage, TableBlock, TextBlock
 
 

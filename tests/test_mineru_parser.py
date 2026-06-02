@@ -20,7 +20,7 @@ from src.parsers.schemas import ParserConfig
 def test_describe_returns_expected_metadata() -> None:
     descriptor = MinerUParser.describe()
     assert descriptor.name == "mineru"
-    assert descriptor.display_name == "MinerU Parser"
+    assert descriptor.display_name == "MinerU 파서"
     assert any("OCR" in s for s in descriptor.strengths)
 
 

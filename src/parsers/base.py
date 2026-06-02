@@ -7,7 +7,7 @@ from typing import ClassVar
 
 from src.schemas import ParsedDocument
 
-from .schemas import ParseRequest, ParserConfig, ParserDescriptor
+from .schemas import ParserConfig, ParserDescriptor, ParseRequest
 
 
 class BasePDFParser(ABC):
@@ -42,6 +42,8 @@ class BasePDFParser(ABC):
 
         TODO: check parser-specific packages or service dependencies here.
         """
+
+        return None
 
 
 __all__ = ["BasePDFParser"]

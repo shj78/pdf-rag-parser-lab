@@ -23,7 +23,7 @@ from src.schemas import ParsedDocument, ParsedPage, TextBlock
 
 from .base import BasePDFParser
 from .helpers import build_bbox
-from .schemas import ParseRequest, ParserDescriptor
+from .schemas import ParserDescriptor, ParseRequest
 
 logger = logging.getLogger(__name__)
 

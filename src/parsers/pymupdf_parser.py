@@ -8,7 +8,7 @@ from src.schemas import ParsedDocument, ParsedPage, TableBlock, TextBlock
 
 from .base import BasePDFParser
 from .helpers import build_bbox, normalize_cell, table_rows_to_markdown
-from .schemas import ParseRequest, ParserDescriptor
+from .schemas import ParserDescriptor, ParseRequest
 
 
 class PyMuPDFParser(BasePDFParser):
@@ -20,17 +20,17 @@ class PyMuPDFParser(BasePDFParser):
     def describe(cls) -> ParserDescriptor:
         return ParserDescriptor(
             name=cls.name,
-            display_name="PyMuPDF Parser",
+            display_name="PyMuPDF 파서",
             description=(
-                "Alternative parser candidate for comparing text extraction, "
-                "layout preservation, and table-adjacent structure handling."
+                "텍스트 추출, 레이아웃 보존, 표 주변 구조 처리를 비교하기 위한 "
+                "대안 파서입니다."
             ),
             strengths=[
-                "Potentially stronger layout access primitives",
-                "Useful alternative to baseline parser behavior",
+                "레이아웃 접근 기능이 비교적 풍부함",
+                "기준 파서와 다른 추출 특성을 비교하기 좋음",
             ],
             known_limitations=[
-                "Table extraction strategy still needs to be designed",
+                "표 추출 전략은 아직 추가 설계가 필요함",
             ],
         )
 

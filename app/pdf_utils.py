@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Sequence
 from .exceptions import PDFProcessingError
 
 if TYPE_CHECKING:
-    import pdfplumber
+    pass
 
 logger = logging.getLogger(__name__)
 

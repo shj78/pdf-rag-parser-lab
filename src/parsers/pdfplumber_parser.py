@@ -9,7 +9,7 @@ from src.schemas import ParsedDocument, ParsedPage, TableBlock, TextBlock
 
 from .base import BasePDFParser
 from .helpers import build_bbox, normalize_cell, table_rows_to_markdown
-from .schemas import ParseRequest, ParserDescriptor
+from .schemas import ParserDescriptor, ParseRequest
 
 
 class PDFPlumberBaselineParser(BasePDFParser):
@@ -27,19 +27,19 @@ class PDFPlumberBaselineParser(BasePDFParser):
     def describe(cls) -> ParserDescriptor:
         return ParserDescriptor(
             name=cls.name,
-            display_name="pdfplumber Baseline",
+            display_name="pdfplumber 기준 파서",
             description=(
-                "Reference parser used to compare alternative PDF extraction "
-                "approaches against an existing baseline."
+                "기존 PDF RAG 흐름에서 사용하던 기준 파서입니다. 다른 파서의 "
+                "텍스트/표 추출 결과를 비교하기 위한 출발점으로 사용합니다."
             ),
             is_baseline=True,
             strengths=[
-                "Known behavior from the existing PDF RAG pipeline",
-                "Useful baseline for text and table comparison",
+                "기존 PDF RAG 파이프라인에서의 동작이 이미 알려져 있음",
+                "텍스트와 표 추출 비교의 기준점으로 사용하기 좋음",
             ],
             known_limitations=[
-                "Table extraction fidelity needs closer evaluation",
-                "Layout and structure preservation are known concerns",
+                "표 추출 정확도는 추가 검증 필요",
+                "레이아웃과 구조 보존에 한계가 있음",
             ],
         )
 
