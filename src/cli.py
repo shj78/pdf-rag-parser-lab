@@ -50,6 +50,14 @@ def _build_retrieval_eval_parser(subparsers: argparse._SubParsersAction) -> None
         "--labels",
         help="Optional override for relevance labels path.",
     )
+    command.add_argument(
+        "--parsed-documents",
+        help="Optional override for parsed document artifact directory.",
+    )
+    command.add_argument(
+        "--output-dir",
+        help="Optional override for where retrieval artifacts should be saved.",
+    )
     command.set_defaults(handler=_handle_retrieval_eval)
 
 
@@ -101,11 +109,22 @@ def _handle_chunk_compare(args: argparse.Namespace) -> int:
 
 
 def _handle_retrieval_eval(args: argparse.Namespace) -> int:
-    """Placeholder handler for retrieval evaluation orchestration."""
+    """Run retrieval evaluation orchestration."""
 
+    from experiments.retrieval_eval.run_experiment import run_retrieval_eval_from_file
+
+    summary = run_retrieval_eval_from_file(
+        config_path=args.config,
+        query_set_override=args.query_set,
+        labels_override=args.labels,
+        parsed_documents_override=args.parsed_documents,
+        output_dir_override=args.output_dir,
+    )
     print(
-        "[TODO] retrieval evaluation orchestration is not implemented yet. "
-        f"config={args.config}"
+        "retrieval evaluation completed. "
+        f"queries={summary['query_count']} "
+        f"chunks={summary['chunk_count']} "
+        f"run_dir={summary['run_dir']}"
     )
     return 0
 

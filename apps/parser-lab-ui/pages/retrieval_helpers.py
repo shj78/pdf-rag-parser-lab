@@ -8,7 +8,8 @@ from typing import Any
 from src.artifacts import load_parsed_document
 from src.chunkers.base import ChunkerConfig, ChunkingRequest
 from src.chunkers.fixed_size_chunker import FixedSizeChunker
-from src.retrieval.index import IndexConfig, LexicalInMemoryIndex, SearchRequest
+from src.retrieval.index import IndexConfig, LexicalInMemoryIndex
+from src.retrieval.retriever import RetrievalPipelineConfig, Retriever
 from src.schemas import Chunk, RetrievalResult
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -93,14 +94,16 @@ def search_chunks(
 ) -> list[RetrievalResult]:
     index = LexicalInMemoryIndex(IndexConfig(backend_name="lexical_in_memory"))
     index.build(chunks)
-    return index.search(
-        SearchRequest(
-            query_id="ui-query",
-            query_text=query,
-            top_k=top_k,
-            filters=filters or {},
+    retriever = Retriever(
+        vector_index=index,
+        config=RetrievalPipelineConfig(
+            top_k_before_rerank=top_k,
+            top_k_after_rerank=top_k,
+            enable_reranker=False,
+            metadata_filters=filters or {},
         )
     )
+    return retriever.retrieve(query_id="ui-query", query_text=query)
 
 
 def chunks_to_rows(chunks: list[Chunk]) -> list[dict[str, Any]]:
