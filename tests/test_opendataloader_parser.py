@@ -106,6 +106,53 @@ def test_build_command_hybrid_mode_includes_backend_and_pages() -> None:
     assert cmd[cmd.index("--pages") + 1] == "1-3"
 
 
+def test_build_command_includes_table_method_when_configured() -> None:
+    cmd = OpenDataLoaderParser._build_command(
+        cli_path=Path(DEFAULT_CLI_PATH),
+        pdf_path=Path("/tmp/x.pdf"),
+        output_dir=Path("/tmp/out"),
+        hybrid_backend="off",
+        hybrid_url=DEFAULT_HYBRID_URL,
+        hybrid_mode="auto",
+        table_method="cluster",
+        pages=None,
+    )
+
+    assert cmd[-1] == "/tmp/x.pdf"
+    assert "--table-method" in cmd
+    assert cmd[cmd.index("--table-method") + 1] == "cluster"
+
+
+def test_build_command_includes_hancom_ai_options_when_configured() -> None:
+    cmd = OpenDataLoaderParser._build_command(
+        cli_path=Path(DEFAULT_CLI_PATH),
+        pdf_path=Path("/tmp/x.pdf"),
+        output_dir=Path("/tmp/out"),
+        hybrid_backend="hancom-ai",
+        hybrid_url="http://localhost:5002",
+        hybrid_mode="full",
+        table_method="cluster",
+        pages="1",
+        hybrid_timeout="120000",
+        hybrid_fallback=True,
+        hancom_regionlist_strategy="table-first",
+        hancom_ocr_strategy="force",
+        hancom_image_cache="disk",
+    )
+
+    assert cmd[cmd.index("--hybrid") + 1] == "hancom-ai"
+    assert cmd[cmd.index("--table-method") + 1] == "cluster"
+    assert cmd[cmd.index("--hybrid-timeout") + 1] == "120000"
+    assert "--hybrid-fallback" in cmd
+    assert (
+        cmd[cmd.index("--hybrid-hancom-ai-regionlist-strategy") + 1]
+        == "table-first"
+    )
+    assert cmd[cmd.index("--hybrid-hancom-ai-ocr-strategy") + 1] == "force"
+    assert cmd[cmd.index("--hybrid-hancom-ai-image-cache") + 1] == "disk"
+    assert cmd[-1] == "/tmp/x.pdf"
+
+
 def test_iter_content_nodes_skips_synthetic_root() -> None:
     root = {
         "file name": "x.pdf",

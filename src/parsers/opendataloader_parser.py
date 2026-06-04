@@ -39,7 +39,13 @@ class OpenDataLoaderParser(BasePDFParser):
     - hybrid_backend: "off" (기본, local 모드) / "docling-fast" / "hancom-ai"
     - hybrid_url: hybrid 백엔드 URL (기본: http://127.0.0.1:5002)
     - hybrid_mode: "auto" (기본) / "full"
+    - table_method: "default" / "cluster" (없으면 CLI 기본값)
     - pages: "1-3" 형식 (없으면 전체)
+    - hybrid_timeout: hybrid 요청 timeout milliseconds
+    - hybrid_fallback: true 면 hybrid 실패 시 Java fallback 허용
+    - hybrid_hancom_ai_regionlist_strategy: "table-first" / "list-only"
+    - hybrid_hancom_ai_ocr_strategy: "off" / "auto" / "force"
+    - hybrid_hancom_ai_image_cache: "memory" / "disk"
     """
 
     name = "opendataloader"
@@ -89,7 +95,15 @@ class OpenDataLoaderParser(BasePDFParser):
         backend = str(extra.get("hybrid_backend", "off"))
         hybrid_url = str(extra.get("hybrid_url") or DEFAULT_HYBRID_URL)
         hybrid_mode = str(extra.get("hybrid_mode", "auto"))
+        table_method = extra.get("table_method")
         pages = extra.get("pages")
+        hybrid_timeout = extra.get("hybrid_timeout")
+        hybrid_fallback = bool(extra.get("hybrid_fallback", False))
+        hancom_regionlist_strategy = extra.get(
+            "hybrid_hancom_ai_regionlist_strategy"
+        )
+        hancom_ocr_strategy = extra.get("hybrid_hancom_ai_ocr_strategy")
+        hancom_image_cache = extra.get("hybrid_hancom_ai_image_cache")
 
         warnings: list[str] = []
 
@@ -102,7 +116,25 @@ class OpenDataLoaderParser(BasePDFParser):
                 hybrid_backend=backend,
                 hybrid_url=hybrid_url,
                 hybrid_mode=hybrid_mode,
+                table_method=str(table_method) if table_method is not None else None,
                 pages=pages,
+                hybrid_timeout=(
+                    str(hybrid_timeout) if hybrid_timeout is not None else None
+                ),
+                hybrid_fallback=hybrid_fallback,
+                hancom_regionlist_strategy=(
+                    str(hancom_regionlist_strategy)
+                    if hancom_regionlist_strategy is not None
+                    else None
+                ),
+                hancom_ocr_strategy=(
+                    str(hancom_ocr_strategy)
+                    if hancom_ocr_strategy is not None
+                    else None
+                ),
+                hancom_image_cache=(
+                    str(hancom_image_cache) if hancom_image_cache is not None else None
+                ),
             )
             logger.info("Running opendataloader-pdf: %s", " ".join(cmd))
 
@@ -139,7 +171,25 @@ class OpenDataLoaderParser(BasePDFParser):
                 "hybrid_backend": backend,
                 "hybrid_url": hybrid_url if backend != "off" else None,
                 "hybrid_mode": hybrid_mode if backend != "off" else None,
+                "table_method": str(table_method) if table_method is not None else None,
                 "pages": pages,
+                "hybrid_timeout": (
+                    str(hybrid_timeout) if hybrid_timeout is not None else None
+                ),
+                "hybrid_fallback": hybrid_fallback if backend != "off" else None,
+                "hybrid_hancom_ai_regionlist_strategy": (
+                    str(hancom_regionlist_strategy)
+                    if hancom_regionlist_strategy is not None
+                    else None
+                ),
+                "hybrid_hancom_ai_ocr_strategy": (
+                    str(hancom_ocr_strategy)
+                    if hancom_ocr_strategy is not None
+                    else None
+                ),
+                "hybrid_hancom_ai_image_cache": (
+                    str(hancom_image_cache) if hancom_image_cache is not None else None
+                ),
                 "document_title": data.get("title"),
                 "document_author": data.get("author"),
                 "number_of_pages": data.get("number of pages"),
@@ -155,17 +205,40 @@ class OpenDataLoaderParser(BasePDFParser):
         hybrid_backend: str,
         hybrid_url: str,
         hybrid_mode: str,
-        pages: str | None,
+        table_method: str | None = None,
+        pages: str | None = None,
+        hybrid_timeout: str | None = None,
+        hybrid_fallback: bool = False,
+        hancom_regionlist_strategy: str | None = None,
+        hancom_ocr_strategy: str | None = None,
+        hancom_image_cache: str | None = None,
     ) -> list[str]:
         cmd: list[str] = [
             str(cli_path),
             "--output-dir", str(output_dir),
             "--format", "json",
         ]
+        if table_method:
+            cmd.extend(["--table-method", table_method])
         if hybrid_backend != "off":
             cmd.extend(["--hybrid", hybrid_backend])
             cmd.extend(["--hybrid-url", hybrid_url])
             cmd.extend(["--hybrid-mode", hybrid_mode])
+            if hybrid_timeout:
+                cmd.extend(["--hybrid-timeout", hybrid_timeout])
+            if hybrid_fallback:
+                cmd.append("--hybrid-fallback")
+            if hancom_regionlist_strategy:
+                cmd.extend(
+                    [
+                        "--hybrid-hancom-ai-regionlist-strategy",
+                        hancom_regionlist_strategy,
+                    ]
+                )
+            if hancom_ocr_strategy:
+                cmd.extend(["--hybrid-hancom-ai-ocr-strategy", hancom_ocr_strategy])
+            if hancom_image_cache:
+                cmd.extend(["--hybrid-hancom-ai-image-cache", hancom_image_cache])
         if pages:
             cmd.extend(["--pages", str(pages)])
         cmd.append(str(pdf_path))
