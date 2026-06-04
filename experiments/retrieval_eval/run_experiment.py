@@ -49,6 +49,7 @@ class RetrievalEvalConfig:
     chunker_name: str = "fixed_size"
     target_chunk_size: int = 800
     overlap: int = 120
+    chunker_options: dict[str, Any] = field(default_factory=dict)
     index_backend: str = "lexical_in_memory"
     embedding_provider: str = "hashing"
     embedding_model: str = "hashing-token-v1"
@@ -130,6 +131,11 @@ def load_experiment_config(
         chunker_name=chunker.get("name", "fixed_size"),
         target_chunk_size=int(chunker_options.get("target_chunk_size", 800)),
         overlap=int(chunker_options.get("overlap", 120)),
+        chunker_options={
+            key: value
+            for key, value in dict(chunker_options).items()
+            if key not in {"target_chunk_size", "overlap"}
+        },
         index_backend=retrieval.get("index_backend", "lexical_in_memory"),
         embedding_provider=retrieval.get("embedding_provider", "hashing"),
         embedding_model=retrieval.get("embedding_model", "hashing-token-v1"),
@@ -232,6 +238,7 @@ def run_retrieval_eval(config: RetrievalEvalConfig) -> dict[str, Any]:
             config.embedding_model if config.index_backend == "embedding_in_memory" else None
         ),
         "chunker_name": config.chunker_name,
+        "chunker_options": config.chunker_options,
         "top_k": config.top_k,
         "reranker_enabled": config.reranker_enabled,
         "reranker_mode": config.reranker_mode if config.reranker_enabled else None,
@@ -302,6 +309,7 @@ def _load_chunks(config: RetrievalEvalConfig) -> list[Chunk]:
                         target_chunk_size=config.target_chunk_size,
                         overlap=config.overlap,
                         parser_name=document.parser_name,
+                        extra_options=config.chunker_options,
                     ),
                 )
             )

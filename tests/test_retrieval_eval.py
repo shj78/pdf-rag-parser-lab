@@ -62,6 +62,23 @@ def test_run_retrieval_eval_supports_embedding_in_memory_backend(
     assert read_json(tmp_path / "out" / "run_summary.json")["chunk_count"] == 2
 
 
+def test_run_retrieval_eval_passes_chunker_extra_options(tmp_path: Path) -> None:
+    config_path = _write_fixture_files(
+        tmp_path,
+        extra_chunker_lines=[
+            "    prepend_page_text_to_tables: true",
+        ],
+    )
+
+    summary = run_retrieval_eval_from_file(config_path)
+
+    chunks = read_json(tmp_path / "out" / "chunks.json")["chunks"]
+    table_chunk = next(chunk for chunk in chunks if chunk["chunk_type"] == "table")
+    assert table_chunk["text"].startswith("청년수당 신청 자격 안내 ")
+    assert table_chunk["metadata"]["context_title"] == "청년수당 신청 자격 안내"
+    assert summary["chunker_options"] == {"prepend_page_text_to_tables": True}
+
+
 def test_run_retrieval_eval_supports_python_module_reranker(
     tmp_path: Path,
     monkeypatch,
@@ -91,6 +108,7 @@ def test_run_retrieval_eval_supports_python_module_reranker(
 def _write_fixture_files(
     tmp_path: Path,
     *,
+    extra_chunker_lines: list[str] | None = None,
     extra_retrieval_lines: list[str] | None = None,
     extra_reranker_lines: list[str] | None = None,
 ) -> Path:
@@ -156,6 +174,7 @@ def _write_fixture_files(
                 "  options:",
                 "    target_chunk_size: 80",
                 "    overlap: 10",
+                *(extra_chunker_lines or []),
                 "retrieval:",
                 *retrieval_lines,
                 "  top_k: 3",

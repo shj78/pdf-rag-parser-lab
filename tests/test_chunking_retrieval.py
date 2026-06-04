@@ -131,6 +131,61 @@ def test_fixed_size_chunker_coalesces_fragmented_text_blocks_by_page() -> None:
     assert "자기성장기록서 10일까지 작성 필수" in chunks[0].text
 
 
+def test_fixed_size_chunker_can_prepend_calendar_month_context_to_tables() -> None:
+    document = ParsedDocument(
+        document_id="doc",
+        source_path="/tmp/doc.pdf",
+        parser_name="mineru",
+        pages=[
+            ParsedPage(
+                page_number=2,
+                text_blocks=[
+                    TextBlock(block_id="text-1", page_number=2, text="4월"),
+                    TextBlock(block_id="text-2", page_number=2, text="5월"),
+                    TextBlock(block_id="text-3", page_number=2, text="6월"),
+                ],
+                table_blocks=[
+                    TableBlock(
+                        table_id="table-1",
+                        page_number=2,
+                        parser_name="mineru",
+                        markdown="| 29 지급② |",
+                    ),
+                    TableBlock(
+                        table_id="table-2",
+                        page_number=2,
+                        parser_name="mineru",
+                        markdown="| 29 지급③ |",
+                    ),
+                ],
+            )
+        ],
+    )
+
+    chunks = FixedSizeChunker().chunk(
+        ChunkingRequest(
+            document=document,
+            config=ChunkerConfig(
+                chunker_name="fixed_size",
+                extra_options={
+                    "prepend_page_text_to_tables": True,
+                    "table_context_strategy": "calendar_month",
+                },
+            ),
+        )
+    )
+
+    assert [chunk.chunk_id for chunk in chunks] == [
+        "doc:mineru:p2:page_text:1",
+        "doc:mineru:p2:table:2",
+        "doc:mineru:p2:table:3",
+    ]
+    assert chunks[1].text.startswith("4월 ")
+    assert chunks[1].metadata["context_title"] == "4월"
+    assert chunks[2].text.startswith("6월 ")
+    assert chunks[2].metadata["context_title"] == "6월"
+
+
 def test_lexical_in_memory_index_searches_and_filters() -> None:
     document = ParsedDocument(
         document_id="doc",
