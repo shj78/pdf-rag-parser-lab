@@ -9,6 +9,6 @@ def render_status_panel() -> None:
     """Render the current implementation status summary."""
 
     st.info(
-        "파서 비교와 fixed-size chunk 기반 로컬 검색은 실행 가능합니다. "
-        "리랭킹, NDCG 평가, LLM 답변 생성은 아직 준비 중입니다."
+        "PDF를 선택하고 파서를 고른 뒤 질문할 수 있습니다. "
+        "기본 답변은 검색 근거 기반이며, OpenAI 또는 Ollama 설정이 있으면 LLM 답변 생성도 사용할 수 있습니다."
     )

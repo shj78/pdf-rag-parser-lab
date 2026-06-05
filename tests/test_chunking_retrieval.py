@@ -7,6 +7,7 @@ from src.retrieval.embeddings import (
     EmbeddingProvider,
     EmbeddingRequest,
     HashingEmbeddingProvider,
+    OpenAIEmbeddingProvider,
 )
 from src.retrieval.index import (
     EmbeddingInMemoryIndex,
@@ -295,6 +296,47 @@ def test_hashing_embedding_provider_returns_fixed_size_vectors() -> None:
     assert len(vectors) == 2
     assert {len(vector) for vector in vectors} == {8}
     assert vectors[0] != vectors[1]
+
+
+def test_openai_embedding_provider_batches_requests(monkeypatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    class _FakeEmbeddings:
+        def create(self, *, model: str, input: list[str]):
+            calls.append({"model": model, "input": input})
+            return _FakeResponse(input)
+
+    class _FakeClient:
+        def __init__(self, *, api_key: str) -> None:
+            self.api_key = api_key
+            self.embeddings = _FakeEmbeddings()
+
+    class _FakeResponse:
+        def __init__(self, inputs: list[str]) -> None:
+            self.data = [
+                type("EmbeddingItem", (), {"embedding": [float(index), 1.0]})()
+                for index, _text in enumerate(inputs, start=1)
+            ]
+
+    monkeypatch.setattr("openai.OpenAI", _FakeClient)
+    provider = OpenAIEmbeddingProvider(
+        EmbeddingConfig(
+            provider_name="openai",
+            model_name="text-embedding-3-small",
+            batch_size=2,
+            extra_options={"api_key": "test-key"},
+        )
+    )
+
+    vectors = provider.embed(
+        EmbeddingRequest(texts=["첫 번째", "두 번째", "세 번째"])
+    )
+
+    assert vectors == [[1.0, 1.0], [2.0, 1.0], [1.0, 1.0]]
+    assert calls == [
+        {"model": "text-embedding-3-small", "input": ["첫 번째", "두 번째"]},
+        {"model": "text-embedding-3-small", "input": ["세 번째"]},
+    ]
 
 
 class _KeywordEmbeddingProvider(EmbeddingProvider):

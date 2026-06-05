@@ -2,7 +2,18 @@
 
 `pdf-rag-parser-lab`은 PDF 파서 비교, 청킹(chunking) 및 검색(retrieval) 전략 테스트, 기존 리랭커(reranker) 통합, 그리고 NDCG 지향 메트릭을 통한 실행 평가를 위한 실험용 저장소입니다.
 
-현재 단계에서는 parser comparison MVP가 구현되어 있으며, retrieval, reranker bridge, chunking, evaluation은 아직 순차적으로 구현 중입니다.
+현재 단계에서는 parser comparison MVP, `ParsedDocument` 기반 fixed-size chunking, 로컬 lexical/embedding in-memory retrieval, 기존 리랭커 브릿지, 그리고 NDCG 기반 retrieval evaluation CLI가 구현되어 있습니다.
+
+## 포트폴리오 포인트
+
+이 프로젝트는 단순 PDF QA 데모가 아니라, **PDF 파싱 품질이 RAG 검색 품질에 미치는 영향**을 분리해서 측정하는 실험 워크벤치입니다.
+
+- 텍스트 레이어가 없거나 표/달력 중심인 PDF에서 `pdfplumber`, `PyMuPDF`, `MinerU`, `OpenDataLoader`를 동일한 `ParsedDocument` 스키마로 정규화합니다.
+- 표가 별도 chunk로 분리될 때 월/섹션 문맥이 사라지는 문제를 발견하고, table chunk context 옵션으로 검색 랭킹을 개선했습니다.
+- 검색 품질은 감이 아니라 manual relevance label과 `NDCG@k`로 측정합니다.
+- 기존 production reranker를 새로 만들지 않고 `python_module` bridge로 연결해 실험 파이프라인에 붙일 수 있게 했습니다.
+
+대표 실험에서는 안내책자형 PDF 1~3페이지의 달력/지급일 질의 6개에 대해 MinerU parser artifact, table context chunking, lexical retrieval 조합으로 `NDCG@1/3/5 = 1.0`을 확인했습니다.
 
 ## 이 저장소의 존재 이유
 
@@ -27,15 +38,21 @@
 - `pymupdf` parser 어댑터
 - `mineru` parser 어댑터
 - `opendataloader` parser 어댑터
+- fixed-size chunker
+- table chunk에 page/month context를 붙이는 실험 옵션
+- 로컬 lexical in-memory 검색 index
+- hashing embedding 기반 in-memory 검색 index
+- Retriever 오케스트레이션 및 기존 python module 리랭커 브릿지
+- NDCG@k 기반 retrieval evaluator 및 `retrieval-eval` CLI
+- Streamlit 기반 파서 비교, 검색 평가, 메타데이터 필터링 MVP
 - parsed document / comparison artifact 저장
-- 파서 비교를 위한 UI 플레이스홀더 구조
 
 이번 단계의 범위 밖(Out of scope) 사항:
 
-- 실제 청킹 로직
-- 실제 검색 또는 벡터 인덱스 구현
-- 실제 리랭커 구현
-- 실제 NDCG 계산
+- production semantic embedding provider 연결
+- 새 리랭커 모델 구현
+- UI에서의 정량 NDCG 결과 표시
+- LLM 기반 QA 답변 생성
 
 ## 베이스라인 vs 대안 파서
 
@@ -46,9 +63,7 @@
 
 목표는 단순히 파서 수준의 비교만이 아닙니다. 이 랩은 파서의 출력이 나중에 청킹, 검색, 리랭킹 및 NDCG 기반 평가로 흐를 수 있도록 설계되었습니다.
 
-## 스캐폴드 구조 (Scaffolded Structure)
-
-참고: 이 워크스페이스에는 새로운 랩 스캐폴드와 관련 없는 이전 프로젝트 파일이 포함되어 있을 수 있습니다. 아래 디렉토리들은 새로운 실험 중심 레이아웃을 위한 의도된 구조입니다.
+## 저장소 구조
 
 ```text
 pdf-rag-parser-lab/
@@ -69,9 +84,9 @@ pdf-rag-parser-lab/
     metadata/
   experiments/
     parser_comparison/
-    chunking_comparison/
-    metadata_filtering/
+    retrieval_eval/
   data/
+    eval/
     README.md
   config.example.yaml
   pyproject.toml
@@ -85,14 +100,13 @@ pdf-rag-parser-lab/
 | 영역 | 책임 | 아직 구현되지 않은 기능 |
 | --- | --- | --- |
 | `src/parsers` | 파서 인터페이스, 파서 기술자(descriptor), 파서 팩토리 | 비교 품질 개선 및 parser별 옵션 확장 |
-| `src/chunkers` | 청커 인터페이스 및 청크 메타데이터 계약 | 실제 청크 생성 로직 |
-| `src/retrieval` | 임베딩, 인덱스, 리트리버, 리랭커 브릿지 인터페이스 | 임베딩 호출, 검색, 리랭크 실행 |
-| `src/evaluation` | 관련성 라벨, 평가 결과 스키마, 평가기 설계 | 메트릭 계산 |
-| `src/metadata` | 필터링 및 다운스트림 분석을 위한 메타데이터 계약 | 필터 실행 |
+| `src/chunkers` | 청커 인터페이스 및 청크 메타데이터 계약 | heading-aware chunking, 부모-자식 chunking |
+| `src/retrieval` | lexical/embedding in-memory index, Retriever, 기존 리랭커 브릿지 | production embedding provider, 추가 reranker mode |
+| `src/evaluation` | 관련성 라벨, NDCG@k, query/run 평가기 | 추가 메트릭 |
+| `src/metadata` | 필터링 및 다운스트림 분석을 위한 메타데이터 계약 | 공통 메타데이터 생성/정규화 helper |
 | `experiments/parser_comparison` | 파서 비교 실행 및 artifact 생성 | 동작 가능 |
-| `experiments/chunking_comparison` | 청킹 비교 설정 및 오케스트레이션 엔트리포인트 | 실행 가능한 파이프라인 |
-| `experiments/metadata_filtering` | 메타데이터 필터링 실험 엔트리포인트 | 실행 가능한 파이프라인 |
-| `apps/parser-lab-ui` | 파서 비교 워크플로우를 위한 플레이스홀더 UI | 전체 UI 상호작용 |
+| `experiments/retrieval_eval` | parsed artifact 기반 retrieval/NDCG 실행 | 동작 가능 |
+| `apps/parser-lab-ui` | 파서 비교 실행, artifact 조회, 로컬 검색 평가, 메타데이터 필터링 | 리랭킹/정량 평가 표시/LLM 답변 생성 |
 
 ## 빠른 시작 (Quick Start)
 
@@ -106,16 +120,43 @@ cp .env.example .env
 parser comparison 예시 실행:
 
 ```bash
-python -m src.cli parser-compare --config config.example.yaml
+python -m src.cli parser-compare \
+  --config config.example.yaml \
+  --documents /path/to/pdfs
 ```
 
-또는 실험 설정 파일을 직접 사용:
+Streamlit UI 실행:
 
 ```bash
-python -m src.cli parser-compare \
-  --config experiments/parser_comparison/config.example.yaml \
-  --documents data/sample_pdfs
+pipenv run streamlit run apps/parser-lab-ui/app.py
 ```
+
+UI에서는 파서 비교 실행 결과를 `artifacts/parser-lab-ui-runs/` 아래에 저장하고, 생성된 parsed document artifact를 fixed-size chunk로 나눈 뒤 로컬 lexical 검색과 메타데이터 필터링을 시험할 수 있습니다.
+
+테스트 및 린트:
+
+```bash
+pipenv run pytest tests -q
+pipenv run ruff check .
+```
+
+## Retrieval Evaluation
+
+`retrieval-eval`은 parsed document artifact, query JSONL, relevance label JSONL을 입력으로 받아 chunking, retrieval, optional reranking, NDCG 평가를 한 번에 실행합니다.
+
+```bash
+pipenv run python -m src.cli retrieval-eval \
+  --config experiments/retrieval_eval/config.2026_youth_allowance_pages1_3.yaml
+```
+
+평가용 query/label 형식:
+
+```json
+{"query_id":"t1_apr_payment_2","query_text":"4월 달력에서 지급②는 몇 일에 표시되어 있나요?"}
+{"query_id":"t1_apr_payment_2","chunk_id":"2026-1차 참여자 안내책자:mineru:p2:table:2","grade":2}
+```
+
+생성 결과는 `artifacts/retrieval-eval-runs/` 아래에 저장되며 git에는 포함하지 않습니다.
 
 ## MinerU 어댑터 사용 (격리 venv)
 
@@ -171,8 +212,8 @@ pipenv run python -m src.cli parser-compare \
 
 ## 향후 계획 (Future Plan)
 
-- 검색 슬라이스를 위한 메타데이터 필터링
+- production semantic embedding provider 연결
+- UI retrieval 화면에 NDCG 평가 artifact 표시
+- 기존 리랭커 브릿지 강화 및 비교 실험
 - 제목 인식 청킹 (heading-aware chunking)
 - 부모-자식 검색 실험
-- 리랭커 브릿지 강화
-- 파서 및 청커 조합에 대한 NDCG 기반 평가 실행

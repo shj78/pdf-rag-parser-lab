@@ -62,12 +62,12 @@ def _build_retrieval_eval_parser(subparsers: argparse._SubParsersAction) -> None
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the placeholder CLI parser."""
+    """Build the experiment CLI parser."""
 
     parser = argparse.ArgumentParser(
         prog="parser-lab",
         description=(
-            "Scaffold CLI for parser comparison, chunking comparison, "
+            "CLI for PDF parser comparison, chunking comparison, "
             "and retrieval evaluation experiments."
         ),
     )
@@ -99,7 +99,7 @@ def _handle_parser_compare(args: argparse.Namespace) -> int:
 
 
 def _handle_chunk_compare(args: argparse.Namespace) -> int:
-    """Placeholder handler for chunking comparison orchestration."""
+    """Report chunking comparison status."""
 
     print(
         "[TODO] chunking comparison orchestration is not implemented yet. "

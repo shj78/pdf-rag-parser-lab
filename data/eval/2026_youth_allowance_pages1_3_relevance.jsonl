@@ -1,0 +1,6 @@
+{"query_id":"t1_apr_payment_2","chunk_id":"2026-1차 참여자 안내책자:mineru:p2:table:2","grade":2,"rationale":"검증된 정답: 4월 달력에서 지급②는 29일이다.","source":"manual_verified"}
+{"query_id":"t1_jun_payment_3","chunk_id":"2026-1차 참여자 안내책자:mineru:p2:table:3","grade":2,"rationale":"검증된 정답: 6월 달력에서 지급③은 29일이다.","source":"manual_verified"}
+{"query_id":"t1_jul_payment_4","chunk_id":"2026-1차 참여자 안내책자:mineru:p3:table:5","grade":2,"rationale":"검증된 정답: 7월 달력에서 지급④는 29일이다.","source":"manual_verified"}
+{"query_id":"t1_jul_youth_policy_festa","chunk_id":"2026-1차 참여자 안내책자:mineru:p3:table:5","grade":2,"rationale":"검증된 정답: 7월 달력에서 서울청년정책 페스타(가제)는 7일~8일이다. MinerU OCR에는 '7 서울청년정책', '8', '페스타(가제) 15'처럼 파편화되어 있다.","source":"manual_verified"}
+{"query_id":"t1_sep_youth_day","chunk_id":"2026-1차 참여자 안내책자:mineru:p3:table:7","grade":2,"rationale":"검증된 정답: 청년의 날은 9월 19일이다.","source":"manual_verified"}
+{"query_id":"t1_oct_round_6_deadline","chunk_id":"2026-1차 참여자 안내책자:mineru:p3:table:8","grade":2,"rationale":"검증된 정답: 10월 달력에서 6회차 마감은 28일이다.","source":"manual_verified"}

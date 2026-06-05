@@ -17,25 +17,14 @@ for import_path in (APP_DIR, PROJECT_ROOT):
 def main() -> None:
     """Render the parser lab UI."""
 
-    from components.experiment_sidebar import render_experiment_sidebar
     from components.status_panel import render_status_panel
-    from pages.metadata_filtering import render_metadata_filtering_page
-    from pages.parser_comparison import render_parser_comparison_page
-    from pages.retrieval_eval import render_retrieval_eval_page
+    from views.pdf_rag import render_pdf_rag_page
 
-    st.set_page_config(page_title="PDF 파서 실험실", layout="wide")
-    st.title("PDF 파서 실험실")
-    st.caption("파서 비교 작업 공간")
+    st.set_page_config(page_title="PDF RAG", layout="wide")
+    st.title("PDF RAG")
 
-    selected_page = render_experiment_sidebar()
     render_status_panel()
-
-    if selected_page == "파서 비교":
-        render_parser_comparison_page()
-    elif selected_page == "검색 평가":
-        render_retrieval_eval_page()
-    else:
-        render_metadata_filtering_page()
+    render_pdf_rag_page()
 
 
 if __name__ == "__main__":

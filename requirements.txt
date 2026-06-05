@@ -1,5 +1,5 @@
 # Base editable install with development tooling and parser dependencies.
 -e .[dev,parsers]
 
-# When the scaffold turns into runnable experiments, this can be expanded to:
+# Optional retrieval/evaluation extras:
 # -e .[dev,parsers,retrieval,evaluation]

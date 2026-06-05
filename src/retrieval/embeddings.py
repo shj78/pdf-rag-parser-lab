@@ -68,11 +68,37 @@ class HashingEmbeddingProvider(EmbeddingProvider):
         ]
 
 
+class OpenAIEmbeddingProvider(EmbeddingProvider):
+    """OpenAI embedding provider for semantic retrieval."""
+
+    def __init__(self, config: EmbeddingConfig) -> None:
+        self.config = config
+
+    def embed(self, request: EmbeddingRequest) -> list[list[float]]:
+        """Embed texts with the OpenAI embeddings API."""
+
+        from openai import OpenAI
+
+        client = OpenAI(api_key=self.config.extra_options.get("api_key"))
+        batch_size = max(1, self.config.batch_size)
+        vectors: list[list[float]] = []
+        for start in range(0, len(request.texts), batch_size):
+            batch = request.texts[start : start + batch_size]
+            response = client.embeddings.create(
+                model=self.config.model_name,
+                input=batch,
+            )
+            vectors.extend([list(item.embedding) for item in response.data])
+        return vectors
+
+
 def create_embedding_provider(config: EmbeddingConfig) -> EmbeddingProvider:
     """Create a concrete embedding provider from config."""
 
     if config.provider_name in {"hashing", "local_hashing"}:
         return HashingEmbeddingProvider(config)
+    if config.provider_name == "openai":
+        return OpenAIEmbeddingProvider(config)
     raise ValueError(f"Unsupported embedding provider: {config.provider_name}")
 
 

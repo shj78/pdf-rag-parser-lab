@@ -42,6 +42,13 @@ data/cache/
 
 # Claude Code settings (local overrides)
 .claude/settings.local.json
+.claude/skills/
+
+# Local handoff / conversation notes
+SESSION_RESTART.md
+docs/notes/
+experiments/implementation_plan_and_status.md
+experiments/posting_pdf_rag_parser_assessment.md
 
 app-구조.md
 

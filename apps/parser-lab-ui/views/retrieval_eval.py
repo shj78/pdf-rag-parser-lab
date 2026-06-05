@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from pages.retrieval_helpers import (
+from views.retrieval_helpers import (
     chunks_to_rows,
     list_parser_runs,
     load_chunks_from_run,

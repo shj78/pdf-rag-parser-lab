@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pdf-rag-parser-lab"
 version = "0.1.0"
-description = "Scaffold-first lab for PDF parser comparison, retrieval experiments, reranker integration, and NDCG evaluation."
+description = "PDF RAG experiment workbench for parser comparison, chunking, retrieval evaluation, reranker integration, and NDCG measurement."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

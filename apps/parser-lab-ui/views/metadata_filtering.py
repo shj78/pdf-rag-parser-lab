@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from pages.retrieval_helpers import (
+from src.schemas import Chunk
+from views.retrieval_helpers import (
     chunks_to_rows,
     list_parser_runs,
     load_chunks_from_run,
@@ -12,7 +13,6 @@ from pages.retrieval_helpers import (
     search_chunks,
     summarize_run_content,
 )
-from src.schemas import Chunk
 
 DEFAULT_QUERY = "자기성장기록서 작성 기간과 회차별 일정을 찾아줘."
 
