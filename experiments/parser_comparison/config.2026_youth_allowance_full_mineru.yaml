@@ -1,0 +1,32 @@
+experiment:
+  name: parser_comparison
+  run_name: 2026-youth-allowance-full-mineru
+
+inputs:
+  document_dir: ../../data/raw
+  file_glob: "2026-1차 참여자 안내책자.pdf"
+
+parsers:
+  baseline: pdfplumber
+  candidates:
+    - pdfplumber
+    - mineru
+
+parser:
+  options:
+    parse_tables: true
+    preserve_layout: true
+
+parser_options:
+  mineru:
+    backend: pipeline
+    language: korean
+    method: ocr
+
+comparison:
+  include_text_blocks: true
+  include_tables: true
+  save_parsed_documents: true
+
+output:
+  run_dir: ../../artifacts/parser-lab-ui-runs/2026-youth-allowance-full-mineru

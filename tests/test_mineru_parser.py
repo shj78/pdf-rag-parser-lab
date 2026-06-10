@@ -143,6 +143,7 @@ def test_build_command_includes_page_range() -> None:
         output_dir=Path("/tmp/out"),
         backend="pipeline",
         language="korean",
+        method=None,
         page_range=(0, 2),
     )
     assert cmd[:7] == ["mineru", "-p", "/tmp/x.pdf", "-o", "/tmp/out", "-b", "pipeline"]
@@ -158,7 +159,23 @@ def test_build_command_omits_page_range_when_none() -> None:
         output_dir=Path("/tmp/out"),
         backend="pipeline",
         language="korean",
+        method=None,
         page_range=None,
     )
     assert "-s" not in cmd
     assert "-e" not in cmd
+
+
+def test_build_command_includes_method_when_provided() -> None:
+    from pathlib import Path
+
+    cmd = MinerUParser._build_command(
+        pdf_path=Path("/tmp/x.pdf"),
+        output_dir=Path("/tmp/out"),
+        backend="pipeline",
+        language="korean",
+        method="ocr",
+        page_range=None,
+    )
+    assert "-m" in cmd
+    assert cmd[cmd.index("-m") + 1] == "ocr"

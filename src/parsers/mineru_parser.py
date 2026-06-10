@@ -1,7 +1,7 @@
 """MinerU parser adapter (CLI subprocess based).
 
 실측 검증 기록: ``experiments/parser_candidates_verification.md`` §9-2.
-CLI 호출 명령: ``mineru -p <pdf> -o <out> -b pipeline -l korean [-s S -e E]``.
+CLI 호출 명령: ``mineru -p <pdf> -o <out> -b pipeline -l korean [-m ocr] [-s S -e E]``.
 """
 
 from __future__ import annotations
@@ -31,6 +31,7 @@ class MinerUParser(BasePDFParser):
     extra_options 키:
     - backend: "pipeline" (CPU, 기본) / "vlm-transformers" 등
     - language: "korean" (기본)
+    - method: "auto" (기본) / "txt" / "ocr"
     - page_range: (start, end) 0-indexed inclusive — 없으면 전체
     """
 
@@ -70,6 +71,7 @@ class MinerUParser(BasePDFParser):
         extra = request.config.extra_options or {}
         backend = str(extra.get("backend", "pipeline"))
         language = str(extra.get("language", "korean"))
+        method = extra.get("method")
         page_range = extra.get("page_range")
 
         warnings: list[str] = []
@@ -81,6 +83,7 @@ class MinerUParser(BasePDFParser):
                 output_dir=output_dir,
                 backend=backend,
                 language=language,
+                method=str(method) if method is not None else None,
                 page_range=page_range,
             )
             logger.info("Running MinerU: %s", " ".join(cmd))
@@ -118,6 +121,7 @@ class MinerUParser(BasePDFParser):
             metadata={
                 "backend": backend,
                 "language": language,
+                "method": str(method) if method is not None else None,
                 "page_range": list(page_range) if page_range else None,
             },
             warnings=warnings,
@@ -129,6 +133,7 @@ class MinerUParser(BasePDFParser):
         output_dir: Path,
         backend: str,
         language: str,
+        method: str | None,
         page_range: tuple[int, int] | list[int] | None,
     ) -> list[str]:
         cmd = [
@@ -138,6 +143,8 @@ class MinerUParser(BasePDFParser):
             "-b", backend,
             "-l", language,
         ]
+        if method:
+            cmd.extend(["-m", method])
         if page_range is not None:
             start, end = int(page_range[0]), int(page_range[1])
             cmd.extend(["-s", str(start), "-e", str(end)])
