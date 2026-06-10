@@ -187,8 +187,8 @@ def _render_run_guidance(
 
 def _render_qa_notice() -> None:
     st.info(
-        "이 화면은 파서 출력만 비교합니다. 근거 검색은 검색 평가 화면에서 "
-        "로컬 lexical 검색으로 확인할 수 있지만, LLM 기반 QA 답변 생성은 아직 연결되어 있지 않습니다."
+        "이 화면은 파서 출력만 비교합니다. 검색 품질 평가는 `retrieval-eval` CLI와 "
+        "README의 NDCG 결과로 관리합니다."
     )
 
 
