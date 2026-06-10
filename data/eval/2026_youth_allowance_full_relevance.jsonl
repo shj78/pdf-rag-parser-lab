@@ -1,0 +1,26 @@
+{"query_id":"q02_현금사용_가능항목","chunk_id":"2026-1차 참여자 안내책자:mineru:p13:table:34","grade":2,"rationale":"현금 사용 가능 항목 3개와 주거비, 생활비, 교육비·구직활동비 세부 항목을 표로 직접 제시한다.","source":"manual_verified"}
+{"query_id":"q02_현금사용_가능항목","chunk_id":"2026-1차 참여자 안내책자:mineru:p13:page_text:33","grade":1,"rationale":"현금 사용은 주거비, 생활공과금, 교육비 등 3개 항목만 가능하다는 본문 요약을 포함한다.","source":"manual_verified"}
+{"query_id":"q03_자기성장기록서_제출기간","chunk_id":"2026-1차 참여자 안내책자:mineru:p20:page_text:48","grade":2,"rationale":"자기성장기록서는 매월 11일부터 다음 달 10일까지 작성 및 제출해야 한다는 기간을 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q03_자기성장기록서_제출기간","chunk_id":"2026-1차 참여자 안내책자:mineru:p20:table:49","grade":2,"rationale":"자기성장기록서 제출 기한과 미제출 시 지급 중단 안내를 표 맥락으로 포함한다.","source":"manual_verified"}
+{"query_id":"q03_자기성장기록서_제출기간","chunk_id":"2026-1차 참여자 안내책자:mineru:p20:table:50","grade":1,"rationale":"회차별 자기성장기록서 작성 기간을 표로 제시해 매월 제출 기간을 보조적으로 확인할 수 있다.","source":"manual_verified"}
+{"query_id":"q04_취업성공금_지급기준_금액","chunk_id":"2026-1차 참여자 안내책자:mineru:p9:page_text:22","grade":2,"rationale":"취업 또는 창업으로 자격상실신고를 한 경우 남은 지급분의 50%를 취업성공금으로 지급하고, 마지막 회차는 50만 원 전액을 지급한다는 기준을 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q04_취업성공금_지급기준_금액","chunk_id":"2026-1차 참여자 안내책자:mineru:p9:table:25","grade":2,"rationale":"table context chunk에 취업성공금 지급 조건, 남은 지급분의 50%, 마지막 월 50만 원 전액 지급 기준이 함께 포함되어 있다.","source":"manual_verified"}
+{"query_id":"q04_취업성공금_지급기준_금액","chunk_id":"2026-1차 참여자 안내책자:mineru:p9:page_text:23","grade":1,"rationale":"취업 신고 예시에서 남은 지원금의 절반을 지급하는 계산 사례를 포함한다.","source":"manual_verified"}
+{"query_id":"q04_취업성공금_지급기준_금액","chunk_id":"2026-1차 참여자 안내책자:mineru:p9:table:26","grade":1,"rationale":"table context chunk에 취업 신고 예시와 남은 지원금 절반 지급 계산 사례가 포함되어 있다.","source":"manual_verified"}
+{"query_id":"q04_취업성공금_지급기준_금액","chunk_id":"2026-1차 참여자 안내책자:mineru:p33:page_text:84","grade":1,"rationale":"자격상실신고와 남은 지원금 절반 지급 FAQ를 포함하지만 마지막 회차 50만 원 예외까지는 충분히 담지 않는다.","source":"manual_verified"}
+{"query_id":"q04_취업성공금_지급기준_금액","chunk_id":"2026-1차 참여자 안내책자:mineru:p33:table:86","grade":1,"rationale":"table context chunk에 자격상실신고와 남은 지원금 절반 지급 FAQ가 중복 포함되어 있다.","source":"manual_verified"}
+{"query_id":"q05_카드사용불가업종_개수","chunk_id":"2026-1차 참여자 안내책자:mineru:p12:table:30","grade":1,"rationale":"사용 불가 업종이 48개라는 요약과 호텔, 주점, 복권 판매, 피부미용, 마사지 등 예시를 포함한다.","source":"manual_verified"}
+{"query_id":"q05_카드사용불가업종_개수","chunk_id":"2026-1차 참여자 안내책자:mineru:p12:table:31","grade":2,"rationale":"청년수당 카드 사용 제한 48개 업종과 특급호텔 등 제한 업종 목록 일부를 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q05_카드사용불가업종_개수","chunk_id":"2026-1차 참여자 안내책자:mineru:p12:table:32","grade":2,"rationale":"총포류 판매점, 카지노, 안마시술소 등 제한 업종 목록의 이어지는 항목을 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q05_카드사용불가업종_개수","chunk_id":"2026-1차 참여자 안내책자:mineru:p12:page_text:29","grade":1,"rationale":"호텔, 주점, 복권 판매, 피부미용, 마사지 등 48개 업종 제한을 요약하지만 전체 목록 근거는 표에 있다.","source":"manual_verified"}
+{"query_id":"q06_8월자격상실신고_취업성공금지급일","chunk_id":"2026-1차 참여자 안내책자:mineru:p33:table:87","grade":2,"rationale":"8월 11일부터 9월 10일 사이 자격상실신고 시 취업성공금 지급일이 9월 29일임을 표로 직접 제시한다.","source":"manual_verified"}
+{"query_id":"q06_8월자격상실신고_취업성공금지급일","chunk_id":"2026-1차 참여자 안내책자:mineru:p33:page_text:84","grade":1,"rationale":"취업성공금 신청과 자격상실신고 일정 FAQ를 포함하지만 9월 29일 지급일은 표가 직접 근거다.","source":"manual_verified"}
+{"query_id":"q06_8월자격상실신고_취업성공금지급일","chunk_id":"2026-1차 참여자 안내책자:mineru:p33:table:86","grade":1,"rationale":"table context chunk에 취업성공금 지급 일정 표를 참조하라는 FAQ 문맥이 포함되어 있다.","source":"manual_verified"}
+{"query_id":"q07_관리비현금사용_증빙서류","chunk_id":"2026-1차 참여자 안내책자:mineru:p13:table:34","grade":2,"rationale":"관리비 현금 사용 시 고지서, 이체확인증, 주민등록등본 제출과 임대차계약서 대체 조건을 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q07_관리비현금사용_증빙서류","chunk_id":"2026-1차 참여자 안내책자:mineru:p22:table:64","grade":2,"rationale":"자기성장기록서 증빙 표에서 관리비의 임대차계약서 또는 고지서, 이체확인증, 주민등록등본 제출을 직접 제시한다.","source":"manual_verified"}
+{"query_id":"q08_해외AI구독료_사후보전","chunk_id":"2026-1차 참여자 안내책자:mineru:p18:page_text:46","grade":2,"rationale":"해외 생성형 AI 프로그램 구독료는 본인 소유 다른 카드로 결제 후 실 지출 금액만큼 사후 보전 신청할 수 있다는 예외 절차를 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q08_해외AI구독료_사후보전","chunk_id":"2026-1차 참여자 안내책자:mineru:p18:page_text:47","grade":1,"rationale":"청년수당 전용 체크카드 미사용 금액은 원칙적으로 보전할 수 없지만 해외결제 생성형 AI 구독료만 예외로 인정된다는 제한 조건을 포함한다.","source":"manual_verified"}
+{"query_id":"q08_해외AI구독료_사후보전","chunk_id":"2026-1차 참여자 안내책자:mineru:p13:table:35","grade":1,"rationale":"해외 생성형 AI 프로그램 구독료 사후 보전 시 필요한 증빙자료를 표로 제시하는 보조 근거다.","source":"manual_verified"}
+{"query_id":"q09_자기성장기록서_미제출불이익","chunk_id":"2026-1차 참여자 안내책자:mineru:p32:page_text:83","grade":2,"rationale":"자기성장기록서를 기한 내 제출하지 않으면 해당 월부터 청년수당 지급이 중단된다는 FAQ 답변을 직접 포함한다.","source":"manual_verified"}
+{"query_id":"q09_자기성장기록서_미제출불이익","chunk_id":"2026-1차 참여자 안내책자:mineru:p20:page_text:48","grade":1,"rationale":"자기성장기록서 미제출 시 다음 회차부터 지급 중단된다는 운영 안내를 포함한다.","source":"manual_verified"}
+{"query_id":"q09_자기성장기록서_미제출불이익","chunk_id":"2026-1차 참여자 안내책자:mineru:p20:table:49","grade":1,"rationale":"table context chunk에 자기성장기록서 미제출 시 지원금 지급 중단 안내가 포함되어 있다.","source":"manual_verified"}

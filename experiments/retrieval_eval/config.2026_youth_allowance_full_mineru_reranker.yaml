@@ -1,0 +1,35 @@
+experiment:
+  run_name: 2026-youth-allowance-full-mineru-lexical-reranker
+
+inputs:
+  parsed_documents_dir: ../../artifacts/parser-lab-ui-runs/2026-youth-allowance-full-mineru-verified/parsed_documents/mineru
+  query_set_path: ../../data/eval/2026_youth_allowance_full_verified_queries.jsonl
+  relevance_labels_path: ../../data/eval/2026_youth_allowance_full_relevance.jsonl
+
+chunker:
+  name: fixed_size
+  options:
+    target_chunk_size: 800
+    overlap: 120
+    prepend_page_text_to_tables: true
+    table_context_strategy: page_summary
+
+retrieval:
+  index_backend: lexical_in_memory
+  top_k: 10
+  filters: {}
+
+reranker:
+  enabled: true
+  mode: python_module
+  entrypoint: app.main:rerank_chunks
+  top_k: 10
+
+evaluation:
+  metric: ndcg
+  k_values: [1, 3, 5, 10]
+
+output:
+  run_dir: ../../artifacts/retrieval-eval-runs/2026-youth-allowance-full-mineru-lexical-reranker
+  save_chunks: true
+  save_rankings: true
