@@ -1,20 +1,19 @@
 # PDF RAG Parser Lab
 
-`pdf-rag-parser-lab`은 PDF 파서 비교, 청킹(chunking) 및 검색(retrieval) 전략 테스트, 기존 리랭커(reranker) 통합, 그리고 NDCG 지향 메트릭을 통한 실행 평가를 위한 실험용 저장소입니다.
+`pdf-rag-parser-lab`은 PDF RAG에서 파서 선택이 검색 품질에 어떤 영향을 주는지 실험하기 위한 저장소입니다.
 
-현재 단계에서는 parser comparison MVP, `ParsedDocument` 기반 fixed-size chunking, 로컬 lexical/embedding in-memory retrieval, 기존 리랭커 브릿지, NDCG 기반 retrieval evaluation CLI, 그리고 Streamlit PDF 질문 데모가 구현되어 있습니다.
+현재 단계에서는 PDF 업로드/파서 선택 UI, 공통 `ParsedDocument` 스키마, fixed-size chunking, 로컬 retrieval, 수동 relevance label 기반 `NDCG@k` 평가 CLI가 구현되어 있습니다.
 
 ## 포트폴리오 포인트
 
-이 프로젝트는 단순 PDF QA 데모가 아니라, **PDF 파싱 품질이 RAG 검색 품질에 미치는 영향**을 분리해서 측정하는 실험 워크벤치입니다.
+이 프로젝트의 포트폴리오 메시지는 단순합니다. **PDF RAG를 구현한 뒤, 파서와 chunk 품질이 검색 결과에 미치는 영향을 NDCG로 측정했습니다.**
 
 - 텍스트 레이어가 없거나 표/달력 중심인 PDF에서 `pdfplumber`, `PyMuPDF`, `MinerU`, `OpenDataLoader`를 동일한 `ParsedDocument` 스키마로 정규화합니다.
-- 표가 별도 chunk로 분리될 때 월/섹션 문맥이 사라지는 문제를 발견하고, table chunk context 옵션으로 검색 랭킹을 개선했습니다.
-- 검색 품질은 감이 아니라 manual relevance label과 `NDCG@k`로 측정합니다.
-- Streamlit UI는 공개 데모용 PDF 업로드/질문 흐름에 집중하고, 검색 품질 평가는 README와 CLI artifact로 재현 가능하게 남깁니다.
-- 기존 production reranker를 새로 만들지 않고 `python_module` bridge로 연결해 실험 파이프라인에 붙일 수 있게 했습니다.
+- Streamlit UI에서 PDF 업로드, 파서 선택, chunk 생성, 근거 검색, 답변 생성을 확인할 수 있습니다.
+- 검색 품질은 감이 아니라 수동 relevance label과 `NDCG@k`로 측정합니다.
+- 잘 검색되는 질문과 실패하는 질문을 나누고, 실패 원인을 parser/chunk/retrieval 단계로 추적합니다.
 
-대표 full-PDF 실험에서는 `2026 서울시 청년수당 참여자 안내책자` 8개 질문과 26개 수동 relevance label을 기준으로 MinerU parser artifact, table-aware fixed chunking, lexical retrieval 조합을 평가했습니다. Lexical baseline은 `NDCG@1 = 0.250`, `NDCG@10 = 0.554`로 정답 근거를 top-10 안에서는 찾지만 1위로 올리는 랭킹 품질에 한계가 있었습니다. 기존 CrossEncoder reranker(`BAAI/bge-reranker-v2-m3`)를 bridge로 연결하자 `NDCG@1 = 0.708`, `NDCG@10 = 0.800`까지 개선되었습니다.
+대표 full-PDF 실험에서는 `2026 서울시 청년수당 참여자 안내책자` 8개 질문과 26개 수동 relevance label을 기준으로 MinerU parser artifact, table context chunking, lexical retrieval 조합을 평가했습니다. 결과적으로 정답 근거가 top-10 안에는 들어오지만, 표/다중 조건 질문에서는 1위로 올라오지 못하는 랭킹 한계를 확인했습니다.
 
 ## 이 저장소의 존재 이유
 
@@ -24,8 +23,8 @@
 
 - `pdfplumber`를 베이스라인 파서로 명시적으로 다룸
 - 베이스라인과 대안 파서들을 비교
-- 파서, 청킹, 검색, 리랭커 통합 및 평가 책임을 명확히 분리
-- 리랭킹 후의 다운스트림 검색 영향도를 쉽게 측정
+- 파서, 청킹, 검색, 평가 책임을 명확히 분리
+- 파서별 출력 차이가 다운스트림 검색 품질에 미치는 영향을 쉽게 측정
 - 재사용 가능한 실험 레이아웃으로 NDCG 기반 평가 준비
 
 ## 현재 범위 (Current Scope)
@@ -43,13 +42,13 @@
 - table chunk에 page/month context를 붙이는 실험 옵션
 - 로컬 lexical in-memory 검색 index
 - hashing embedding 기반 in-memory 검색 index
-- Retriever 오케스트레이션 및 기존 python module 리랭커 브릿지
+- Retriever 오케스트레이션 및 선택적 python module reranker bridge
 - NDCG@k 기반 retrieval evaluator 및 `retrieval-eval` CLI
 - Streamlit 기반 PDF 업로드/질문 데모
 - `OPENAI_API_KEY` 또는 `OLLAMA_BASE`가 있을 때 근거 기반 QA 답변 생성
 - parsed document / comparison artifact 저장
 
-이번 단계의 범위 밖(Out of scope) 사항:
+이번 포트폴리오 마감 범위 밖(Out of scope) 사항:
 
 - production semantic embedding provider 연결
 - 새 리랭커 모델 구현
@@ -63,7 +62,7 @@
 - `mineru`: 내장 OCR 기반. 텍스트 레이어가 없는 안내책자형 PDF 처리. 무거운 ML 스택을 끌고 와서 **격리 venv `.venv-mineru/`** 에 별도 설치 (아래 섹션 참조).
 - `opendataloader`: Java 기반 local 추출 + 선택적 hybrid OCR. **격리 venv `.venv-opendataloader/`** 에 별도 설치하며, hybrid 모드는 별도 backend 서버가 필요합니다.
 
-목표는 단순히 파서 수준의 비교만이 아닙니다. 이 랩은 파서의 출력이 나중에 청킹, 검색, 리랭킹 및 NDCG 기반 평가로 흐를 수 있도록 설계되었습니다.
+목표는 단순히 파서 출력 파일을 비교하는 데서 끝나지 않는 것입니다. 이 랩은 파서의 출력이 청킹, 검색, NDCG 기반 평가로 이어질 때 어떤 차이를 만드는지 확인하도록 설계되었습니다.
 
 ## 저장소 구조
 
@@ -103,12 +102,12 @@ pdf-rag-parser-lab/
 | --- | --- | --- |
 | `src/parsers` | 파서 인터페이스, 파서 기술자(descriptor), 파서 팩토리 | 비교 품질 개선 및 parser별 옵션 확장 |
 | `src/chunkers` | 청커 인터페이스 및 청크 메타데이터 계약 | heading-aware chunking, 부모-자식 chunking |
-| `src/retrieval` | lexical/embedding in-memory index, Retriever, 기존 리랭커 브릿지 | production embedding provider, 추가 reranker mode |
+| `src/retrieval` | lexical/embedding in-memory index, Retriever, 선택적 reranker bridge | production embedding provider |
 | `src/evaluation` | 관련성 라벨, NDCG@k, query/run 평가기 | 추가 메트릭 |
 | `src/metadata` | 필터링 및 다운스트림 분석을 위한 메타데이터 계약 | 공통 메타데이터 생성/정규화 helper |
 | `experiments/parser_comparison` | 파서 비교 실행 및 artifact 생성 | 동작 가능 |
 | `experiments/retrieval_eval` | parsed artifact 기반 retrieval/NDCG 실행 | 동작 가능 |
-| `apps/parser-lab-ui` | PDF 업로드/질문, 근거 검색, 답변 생성 데모 | UI reranker 비교 전환 |
+| `apps/parser-lab-ui` | PDF 업로드/질문, 근거 검색, 답변 생성 데모 | 평가 결과 시각화 확장 |
 
 ## 빠른 시작 (Quick Start)
 
@@ -133,7 +132,7 @@ Streamlit UI 실행:
 pipenv run streamlit run apps/parser-lab-ui/app.py
 ```
 
-UI에서는 PDF 업로드 후 파서 선택, chunk 생성, 검색/답변 생성을 시험할 수 있습니다. 검색 품질 평가는 UI에 노출하지 않고, 아래 `Retrieval Evaluation` 섹션의 CLI와 저장 artifact로 재현합니다.
+UI에서는 PDF 업로드 후 파서 선택, chunk 생성, 검색/답변 생성을 시험할 수 있습니다. 검색 품질 평가는 아래 `Retrieval Evaluation` 섹션의 CLI와 Streamlit 평가 결과 탭에서 확인합니다.
 
 테스트 및 린트:
 
@@ -164,39 +163,39 @@ pipenv run python -m src.cli retrieval-eval \
 
 공개 포트폴리오용 핵심 결과는 Streamlit UI가 아니라 CLI 평가 결과로 정리합니다. 이 평가는 LLM 답변 품질이 아니라 **질문에 답하는 근거 chunk가 검색 결과 상위에 배치되는지**를 측정합니다.
 
-Full PDF baseline:
+Full PDF lexical baseline:
 
 ```bash
 pipenv run python -m src.cli retrieval-eval \
   --config experiments/retrieval_eval/config.2026_youth_allowance_full_mineru.yaml
 ```
 
-Full PDF reranker run:
+| 평가 항목 | 결과 | 해석 |
+| --- | --- | --- |
+| 기준 문서 | `2026 서울시 청년수당 참여자 안내책자` | 표, FAQ, 일정이 섞인 안내책자형 PDF |
+| 파서 / chunking | MinerU OCR / fixed-size + table context | OCR 결과를 공통 schema로 정규화한 뒤 표 chunk에 페이지 문맥을 보강 |
+| 평가셋 | 질문 8개, relevance label 26개 | NotebookLM 후보를 사람이 PDF와 chunk에 대조해 확정 |
+| 검색 대상 | 89 chunks, top-10 | LLM 답변 전 단계의 근거 검색 품질만 측정 |
+| 검색 방식 | lexical in-memory | 파서/chunk 결과를 보기 위한 단순 baseline |
+| `NDCG@1` | 0.250 | 1위에 정답 근거가 바로 나온 질문은 2/8개 |
+| `NDCG@3` | 0.363 | 일부 단답/표 질문은 상위권에 근거가 잡힘 |
+| `NDCG@5` | 0.418 | 5위 안에서도 표/다중 조건 질문은 부족 |
+| `NDCG@10` | 0.554 | 정답 근거를 완전히 놓치기보다 후순위로 미는 문제가 큼 |
 
-```bash
-pipenv run python -m src.cli retrieval-eval \
-  --config experiments/retrieval_eval/config.2026_youth_allowance_full_mineru_reranker.yaml
-```
+#### 질문별 진단
 
-| 항목 | 값 |
-| --- | ---: |
-| 기준 문서 | `2026 서울시 청년수당 참여자 안내책자` |
-| 파서 | MinerU OCR |
-| 평가 질문 | 8 |
-| 수동 relevance label | 26 |
-| 검색 대상 chunk | 89 |
-| baseline 검색 방식 | lexical in-memory |
-| reranker | `app.main:rerank_chunks` / `BAAI/bge-reranker-v2-m3` |
-| 검색 후보 | top-10 |
+| 구분 | 질문 | 첫 관련 근거 순위 | 원인 분석 |
+| --- | --- | ---: | --- |
+| 잘 됨 | 해외 생성형 AI 구독료 사후 보전 | 1위 | `해외 생성형 AI`, `사후 보전` 같은 고유 표현이 한 chunk에 모여 lexical 검색과 잘 맞음 |
+| 잘 됨 | 자기성장기록서 미제출 불이익 | 1위 | FAQ 답변이 질문 표현과 거의 직접 대응하고, 근거가 짧은 본문 chunk에 집중됨 |
+| 상위권 | 현금 사용 가능 항목 | 2위, 직접 근거 3위 | 정답 표는 3위, 본문 요약은 2위. 다만 `현금 사용` 표현이 FAQ에도 반복되어 1위가 밀림 |
+| 상위권 | 자기성장기록서 제출 기간 | 2위 | 제출 기간 본문은 잘 잡히지만 `자기성장기록서`가 목차/안내 페이지에도 자주 등장함 |
+| 상위권 | 8월 자격상실신고 시 취업성공금 지급일 | 3위 | 일정 표 chunk가 상위권에 잡혔으나 날짜/자격상실/취업성공금 표현이 다른 페이지와도 겹침 |
+| 실패/후순위 | 취업성공금 지급 기준과 금액 | 6위, 직접 근거 9위 | 조건, 금액, 마지막 회차 예외가 여러 근거로 나뉘는 multi-hop 질문이라 부분 근거가 먼저 올라옴 |
+| 실패/후순위 | 카드 사용 불가 업종과 개수 | 9위, 직접 근거 10위 | 제한 업종 목록이 긴 표로 분리되고 `사용 불가` 표현이 다른 정책 안내에도 반복됨 |
+| 실패/후순위 | 관리비 현금 사용 증빙서류 | 8위 | 증빙서류 표는 찾지만, 관리비/현금/증빙 표현이 보완 안내 페이지와 겹쳐 랭킹이 밀림 |
 
-| 지표 | lexical baseline | + reranker | 개선폭 |
-| --- | ---: | ---: | ---: |
-| `NDCG@1` | 0.250 | 0.708 | +0.458 |
-| `NDCG@3` | 0.363 | 0.753 | +0.390 |
-| `NDCG@5` | 0.418 | 0.785 | +0.367 |
-| `NDCG@10` | 0.554 | 0.800 | +0.245 |
-
-이 결과는 lexical baseline이 근거를 완전히 놓치는 문제보다는 **정답 근거를 1위로 올리지 못하는 랭킹 문제**가 컸고, CrossEncoder reranker가 이 병목을 상당 부분 개선했음을 보여줍니다. 다음 실험은 embedding retrieval, lexical+embedding hybrid, query type별 실패 분석 순으로 비교하는 방향이 적합합니다.
+이 결과는 현재 프로젝트의 목표를 충분히 보여줍니다. PDF RAG를 구현하는 데서 끝내지 않고, 파서와 chunk 결과가 실제 검색 랭킹에 어떤 영향을 주는지 수동 라벨과 `NDCG@k`로 검증했습니다.
 
 참고로 1~3페이지 smoke 실험에서는 달력/지급일 질의 6개에 대해 table context chunking을 적용했을 때 `NDCG@1/3/5 = 1.0`을 확인했습니다. 이 결과는 regression smoke 성격이며, 위 full PDF baseline과 직접 비교하지 않습니다.
 
@@ -266,9 +265,11 @@ pipenv run python -m src.cli parser-compare \
 - parser comparison은 빨리 검증 가능하게 만들고, retrieval 이후 단계는 작은 인터페이스로 점진 구현합니다.
 - 향후 메타데이터 필터링 및 부모-자식(parent-child) 검색을 위한 여지를 남겨둡니다.
 
-## 향후 계획 (Future Plan)
+## 확장 후보 (Backlog)
+
+아래 항목은 현재 포트폴리오 마감 범위에는 포함하지 않고, 이후 실험 후보로 남겨둡니다.
 
 - production semantic embedding provider 연결
-- UI에서 기존 리랭커 브릿지 비교 실험 전환
+- UI에서 reranker 비교 실험 전환
 - 제목 인식 청킹 (heading-aware chunking)
 - 부모-자식 검색 실험
